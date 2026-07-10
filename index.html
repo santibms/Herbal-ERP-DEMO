@@ -178,18 +178,13 @@
 <header class="hero">
   <button type="button" class="theme-toggle" id="themeToggle" aria-label="สลับโหมดสว่าง/มืด" title="สลับโหมดสว่าง/มืด">🌙</button>
   <div class="leaf">🌿</div>
-  <h1>แบบประเมินหลังการสาธิตระบบ</h1>
-  <div class="sub">ระบบ HERBAL ERP — Smart Innovation</div>
-  <div class="badge">📅 Demo วันที่ 13 กรกฎาคม 2569</div>
+  <h1>Herbal ERP</h1>
+  <div class="sub">ระบบบริหารจัดการการผลิตยาสมุนไพรครบวงจร ตั้งแต่วัตถุดิบจนถึงสินค้าสำเร็จรูป</div>
+  <div class="badge">📅 แบบประเมินหลังการสาธิตระบบ · Demo วันที่ 13 กรกฎาคม 2569</div>
 </header>
 
 <div class="wrap">
-  <p style="text-align:center;color:var(--muted);margin:16px 0 0;font-size:16px">
-    ขอบคุณที่ร่วมรับชมการสาธิต 🙏 ความเห็นของท่านจะช่วยให้เราพัฒนาระบบให้ตรงกับความต้องการมากที่สุด
-    <br/>ใช้เวลาประมาณ 2 นาที
-  </p>
-
-  <!-- แจ้งผู้ใช้/เจ้าหน้าที่ว่าข้อมูลถูกส่งไปที่ใด (JS จะปรับข้อความตามว่าตั้ง ENDPOINT ไว้หรือยัง) -->
+  <!-- แจ้งเฉพาะกรณี "โหมดทดสอบ" (ยังไม่ได้ตั้ง ENDPOINT) เท่านั้น -->
   <div class="databanner" id="dataBanner" style="display:none"></div>
 
   <form id="ev">
@@ -292,11 +287,11 @@
 
       <div class="row" style="margin-top:8px">
         <div>
-          <label class="fld" for="followDate">สะดวกให้ติดต่อกลับ (วันที่)</label>
+          <label class="fld" for="followDate">สะดวกให้ทีมงานติดต่อกลับ (วันที่)</label>
           <input type="date" id="followDate" name="followDate" />
         </div>
         <div>
-          <label class="fld" for="followTime">ช่วงเวลาที่สะดวก</label>
+          <label class="fld" for="followTime">ช่วงเวลาที่สะดวกให้ติดต่อ</label>
           <select id="followTime" name="followTime">
             <option value="">— เลือกช่วงเวลา —</option>
             <option>ช่วงเช้า (09:00–12:00)</option>
@@ -331,7 +326,7 @@
   </div>
 
   <footer>
-    ระบบ HERBAL ERP · งานมหกรรมสมุนไพรแห่งชาติ ครั้งที่ 23<br/>
+    Herbal ERP · ระบบบริหารจัดการการผลิตยาสมุนไพรครบวงจร<br/>
     <a class="adminlink" href="./admin.html">🔒 สำหรับเจ้าหน้าที่ (ดูผลประเมิน)</a>
   </footer>
 </div>
@@ -453,16 +448,14 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{
   if(!document.documentElement.getAttribute('data-theme')) applyTheme('auto');
 });
 
-/* ---- Data-destination banner: tell everyone WHERE the answers go ---- */
+/* ---- Data-destination banner: แสดงเฉพาะกรณี "โหมดทดสอบ" (ยังไม่ได้ตั้ง ENDPOINT) ---- */
 const banner = document.getElementById('dataBanner');
-if(ENDPOINT){
-  banner.className='databanner central';
-  banner.innerHTML='<span class="ic">☁️</span><span>ข้อมูลจะถูกส่งเข้าฐานข้อมูลส่วนกลาง (Google Sheet) ของทีมงานโดยอัตโนมัติ ทีมงานจะเห็นทันทีที่ท่านกดส่ง</span>';
-}else{
+if(!ENDPOINT){
   banner.className='databanner local';
   banner.innerHTML='<span class="ic">⚠️</span><span><b>โหมดทดสอบ:</b> ยังไม่ได้ตั้งค่าฐานข้อมูลส่วนกลาง ข้อมูลจะถูกเก็บไว้ใน<u>เครื่องนี้เท่านั้น</u> (ดูได้ที่หน้าเจ้าหน้าที่บนเครื่องเดียวกัน)</span>';
+  banner.style.display='flex';
 }
-banner.style.display='flex';
+/* เมื่อตั้ง ENDPOINT แล้ว จะไม่แสดงแถบใด ๆ (ข้อมูลส่งเข้า Google Sheet เงียบ ๆ) */
 
 function showErr(id,on){const e=document.getElementById(id);if(e)e.classList.toggle('show',on);}
 
