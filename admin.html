@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ผลแบบประเมิน Demo — เจ้าหน้าที่ | HERBAL ERP</title>
+<style>
+  :root{--green-800:#1b4d2b;--green-700:#2e6b3e;--green-600:#3a8150;--green-100:#e6f2ea;
+    --bg:#f4f7f4;--card:#fff;--text:#1d2a20;--muted:#5c6b5f;--border:#dbe6dd;--gold:#c9a227;
+    --shadow:0 2px 14px rgba(20,53,31,.08)}
+  @media(prefers-color-scheme:dark){:root{--bg:#0f1712;--card:#16211a;--text:#e7f0e9;--muted:#9db3a4;--border:#26362b;--green-100:#1d3327}}
+  *{box-sizing:border-box}body{margin:0;font-family:"TH Sarabun New","Sarabun",-apple-system,"Segoe UI",system-ui,sans-serif;
+    background:var(--bg);color:var(--text);font-size:17px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 14px 60px}
+  header{background:linear-gradient(135deg,var(--green-800),var(--green-600));color:#fff;
+    padding:20px;border-radius:0 0 22px 22px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header h1{margin:0;font-size:22px}
+  /* login */
+  .gate{max-width:380px;margin:70px auto;background:var(--card);border:1px solid var(--border);
+    border-radius:16px;padding:28px;box-shadow:var(--shadow);text-align:center}
+  .gate .leaf{font-size:44px}
+  .gate input{width:100%;padding:12px;font-size:18px;border:1.5px solid var(--border);border-radius:10px;margin:14px 0;background:var(--bg);color:var(--text)}
+  .gate button{width:100%;padding:13px;font-size:18px;font-weight:700;border:none;border-radius:10px;background:var(--green-700);color:#fff;cursor:pointer}
+  .gerr{color:#c0392b;font-size:15px;min-height:20px}
+  /* kpis */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:18px}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+  .kpi .v{font-size:30px;font-weight:800;color:var(--green-700)}
+  .kpi .l{color:var(--muted);font-size:15px}
+  /* module bars */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-top:18px;box-shadow:var(--shadow)}
+  .card h2{margin:0 0 12px;font-size:19px;color:var(--green-700)}
+  .bar{display:flex;align-items:center;gap:10px;margin:7px 0}
+  .bar .nm{width:150px;font-size:16px;flex:none}
+  .bar .track{flex:1;background:var(--green-100);border-radius:8px;height:22px;overflow:hidden}
+  .bar .fill{height:100%;background:linear-gradient(90deg,var(--green-600),var(--green-700));border-radius:8px 0 0 8px}
+  .bar .val{width:96px;text-align:right;font-variant-numeric:tabular-nums;font-size:15px;color:var(--muted);flex:none}
+  /* toolbar + table */
+  .toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+  .toolbar button{padding:10px 16px;font:inherit;font-size:16px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+  .toolbar button.acc{background:var(--green-700);color:#fff;border-color:var(--green-700)}
+  .toolbar button.danger{color:#c0392b;border-color:#e0b4ad}
+  .tblwrap{overflow-x:auto;margin-top:12px;border:1px solid var(--border);border-radius:12px}
+  table{border-collapse:collapse;width:100%;min-width:900px;font-size:15px}
+  th,td{padding:9px 11px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+  th{background:var(--green-100);position:sticky;top:0;font-size:14.5px;white-space:nowrap}
+  tr:hover td{background:var(--green-100)}
+  .pill{display:inline-block;background:var(--green-100);border-radius:999px;padding:1px 9px;font-size:13.5px;margin:1px 2px 1px 0}
+  .empty{text-align:center;color:var(--muted);padding:40px}
+  .muted{color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+
+<div id="gate" class="gate">
+  <div class="leaf">🌿🔒</div>
+  <h2 style="margin:6px 0;color:var(--green-700)">สำหรับเจ้าหน้าที่</h2>
+  <div class="muted">กรอกรหัสผ่านเพื่อดูผลแบบประเมิน</div>
+  <input type="password" id="pw" placeholder="รหัสผ่าน" autocomplete="off"/>
+  <div class="gerr" id="gerr"></div>
+  <button id="loginBtn">เข้าสู่ระบบ</button>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <h1>🌿 ผลแบบประเมินหลังการ Demo</h1>
+    <div class="muted" style="color:#dff">อัปเดตล่าสุด: <span id="upd">—</span></div>
+  </header>
+  <div class="wrap">
+    <div class="kpis" id="kpis"></div>
+
+    <div class="card">
+      <h2>📊 คะแนนเฉลี่ยรายระบบ (เฉพาะผู้ที่ได้ชม)</h2>
+      <div id="modBars"></div>
+    </div>
+
+    <div class="card">
+      <h2>🎯 ระบบที่ถูกเลือก "สนใจนำไปใช้" มากที่สุด</h2>
+      <div id="interestBars"></div>
+    </div>
+
+    <div class="toolbar">
+      <button class="acc" id="csvBtn">⬇ ดาวน์โหลด CSV</button>
+      <button id="jsonBtn">⬇ สำรองข้อมูล (JSON)</button>
+      <button id="importBtn">⬆ นำเข้าข้อมูล (JSON)</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none"/>
+      <button class="danger" id="clearBtn">🗑 ล้างข้อมูลในเครื่องนี้</button>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="tblwrap"><table id="tbl"></table></div>
+      <div class="empty" id="empty" style="display:none">ยังไม่มีข้อมูลแบบประเมินในเครื่องนี้</div>
+    </div>
+    <p class="muted" style="margin-top:10px">
+      * ข้อมูลถูกเก็บใน localStorage ของเบราว์เซอร์เครื่องนี้ (ตามที่ตั้ง ENDPOINT ในหน้าแบบฟอร์ม)
+      หากใช้หลายเครื่อง ให้รวบรวมด้วยปุ่ม "สำรอง/นำเข้า JSON" หรือเชื่อม Google Sheet
+    </p>
+  </div>
+</div>
+
+<script>
+const PASS="admin1234";
+const KEY="herbal_demo_eval";
+const MODULES=[
+  {key:"warehouse",icon:"📦",name:"คลังสินค้า"},{key:"production",icon:"🏭",name:"การผลิต"},
+  {key:"qc",icon:"🧪",name:"คุณภาพ (QC)"},{key:"gmp",icon:"✅",name:"คุณภาพ GMP"},
+  {key:"purchasing",icon:"🛒",name:"จัดซื้อ"},{key:"sales",icon:"💰",name:"ขาย"},
+  {key:"hr",icon:"👥",name:"บุคลากร"},{key:"accounting",icon:"💳",name:"บัญชี"},
+];
+
+/* ---- gate ---- */
+function tryLogin(){
+  const v=document.getElementById('pw').value;
+  if(v===PASS){sessionStorage.setItem('herbal_admin','1');show();}
+  else document.getElementById('gerr').textContent="รหัสผ่านไม่ถูกต้อง";
+}
+document.getElementById('loginBtn').onclick=tryLogin;
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin();});
+
+function load(){return JSON.parse(localStorage.getItem(KEY)||'[]');}
+function esc(s){return String(s??'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
+
+function show(){
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app').style.display='block';
+  render();
+}
+
+function render(){
+  const rows=load();
+  document.getElementById('upd').textContent=new Date().toLocaleString('th-TH');
+
+  // KPIs
+  const withDemo=rows.filter(r=>r.interestLevel && r.interestLevel!=='ยังไม่สนใจ').length;
+  const quote=rows.filter(r=>r.interestLevel==='ต้องการใบเสนอราคา'||r.interestLevel==='นัดหมายดูรายละเอียด'||r.interestLevel==='ขอทดลองใช้งาน').length;
+  const npsVals=rows.map(r=>r.nps).filter(v=>typeof v==='number');
+  const avgNps=npsVals.length?(npsVals.reduce((a,b)=>a+b,0)/npsVals.length).toFixed(1):'—';
+  document.getElementById('kpis').innerHTML=[
+    ['ผู้ประเมินทั้งหมด',rows.length],['สนใจ/ขอต่อยอด',withDemo],
+    ['ขอใบเสนอราคา/นัดหมาย',quote],['NPS เฉลี่ย (0–10)',avgNps],
+  ].map(k=>`<div class="kpi"><div class="v">${k[1]}</div><div class="l">${k[0]}</div></div>`).join('');
+
+  // module average ratings
+  const mb=MODULES.map(m=>{
+    const vs=rows.map(r=>r.ratings?.[m.key]).filter(v=>typeof v==='number'&&v>0);
+    const avg=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:0;
+    return {...m,avg,n:vs.length};
+  });
+  document.getElementById('modBars').innerHTML=mb.map(m=>`
+    <div class="bar"><div class="nm">${m.icon} ${m.name}</div>
+      <div class="track"><div class="fill" style="width:${m.avg/5*100}%"></div></div>
+      <div class="val">${m.avg?m.avg.toFixed(2):'—'} <span class="muted">(n=${m.n})</span></div></div>`).join('');
+
+  // interest counts
+  const ic={}; MODULES.forEach(m=>ic[m.name]=0);
+  rows.forEach(r=>(r.interest||[]).forEach(n=>{if(n in ic)ic[n]++;}));
+  const maxi=Math.max(1,...Object.values(ic));
+  document.getElementById('interestBars').innerHTML=MODULES.map(m=>`
+    <div class="bar"><div class="nm">${m.icon} ${m.name}</div>
+      <div class="track"><div class="fill" style="width:${ic[m.name]/maxi*100}%"></div></div>
+      <div class="val">${ic[m.name]} ราย</div></div>`).join('');
+
+  // table
+  const empty=document.getElementById('empty'), tbl=document.getElementById('tbl');
+  if(!rows.length){empty.style.display='block';tbl.innerHTML='';return;}
+  empty.style.display='none';
+  const head=['เวลา','หน่วยงาน','ผู้ประเมิน','โทร','สนใจนำไปใช้','สำคัญสุด','NPS','ขั้นตอน','สิ่งที่อยากให้พัฒนา'];
+  tbl.innerHTML='<tr>'+head.map(h=>`<th>${h}</th>`).join('')+'</tr>'+
+    rows.slice().reverse().map(r=>`<tr>
+      <td class="muted">${esc(new Date(r.ts).toLocaleString('th-TH'))}</td>
+      <td>${esc(r.org)}<br><span class="muted">${esc(r.orgType)}</span></td>
+      <td>${esc(r.name)}<br><span class="muted">${esc(r.role)}</span></td>
+      <td>${esc(r.phone)}</td>
+      <td>${(r.interest||[]).map(i=>`<span class="pill">${esc(i)}</span>`).join('')||'—'}</td>
+      <td>${esc(r.topPriority)||'—'}</td>
+      <td style="text-align:center;font-weight:700">${r.nps??'—'}</td>
+      <td>${esc(r.interestLevel)||'—'}</td>
+      <td style="max-width:260px">${esc(r.improve)||'—'}${r.missing?'<br><span class="muted">ขาด: '+esc(r.missing)+'</span>':''}</td>
+    </tr>`).join('');
+}
+
+/* ---- export CSV ---- */
+function toCSV(rows){
+  const cols=['ts','orgType','org','name','role','phone',
+    ...MODULES.map(m=>'rate_'+m.key),
+    'interest','topPriority','priorities','nps','interestLevel','followDate','followTime','improve','missing'];
+  const header=['เวลา','ประเภทหน่วยงาน','หน่วยงาน','ผู้ประเมิน','ตำแหน่ง','โทร',
+    ...MODULES.map(m=>'คะแนน:'+m.name),
+    'สนใจนำไปใช้','สำคัญสุด','หัวข้อสำคัญ','NPS','ขั้นตอน','วันติดต่อ','เวลาติดต่อ','อยากให้พัฒนา','ระบบที่ขาด'];
+  const line=a=>a.map(v=>{v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',');
+  const body=rows.map(r=>line([
+    r.ts,r.orgType,r.org,r.name,r.role,r.phone,
+    ...MODULES.map(m=>{const v=r.ratings?.[m.key];return v===0?'ไม่ได้ดู':(v??'');}),
+    (r.interest||[]).join(' | '),r.topPriority,(r.priorities||[]).join(' | '),
+    r.nps,r.interestLevel,r.followDate,r.followTime,r.improve,r.missing,
+  ]));
+  return '﻿'+line(header)+'\n'+body.join('\n');
+}
+function dl(name,content,type){const b=new Blob([content],{type});const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
+
+document.getElementById('csvBtn').onclick=()=>dl('demo-eval.csv',toCSV(load()),'text/csv;charset=utf-8');
+document.getElementById('jsonBtn').onclick=()=>dl('demo-eval-backup.json',JSON.stringify(load(),null,2),'application/json');
+document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
+document.getElementById('importFile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{try{const inc=JSON.parse(rd.result);if(!Array.isArray(inc))throw 0;
+    const cur=load();const seen=new Set(cur.map(x=>x.ts));
+    inc.forEach(x=>{if(!seen.has(x.ts))cur.push(x);});
+    localStorage.setItem(KEY,JSON.stringify(cur));render();alert('นำเข้าสำเร็จ รวม '+cur.length+' รายการ');
+  }catch(_){alert('ไฟล์ไม่ถูกต้อง');}};rd.readAsText(f);
+};
+document.getElementById('clearBtn').onclick=()=>{
+  if(confirm('ยืนยันล้างข้อมูลแบบประเมินทั้งหมดในเครื่องนี้? (ควรสำรอง JSON ก่อน)')){
+    localStorage.removeItem(KEY);render();}
+};
+
+if(sessionStorage.getItem('herbal_admin')==='1')show();
+</script>
+</body>
+</html>
