@@ -31,9 +31,12 @@
   .kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
   .kpi .v{font-size:30px;font-weight:800;color:var(--green-700)}
   .kpi .l{color:var(--muted);font-size:15px}
+  .kpi .sub{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.35;opacity:.85}
   /* module bars */
   .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-top:18px;box-shadow:var(--shadow)}
-  .card h2{margin:0 0 12px;font-size:19px;color:var(--green-700)}
+  .card h2{margin:0 0 4px;font-size:19px;color:var(--green-700)}
+  .card .hint{color:var(--muted);font-size:14px;margin:0 0 14px;line-height:1.45}
+  .card .hint b{color:var(--green-700);font-weight:700}
   .bar{display:flex;align-items:center;gap:10px;margin:7px 0}
   .bar .nm{width:150px;font-size:16px;flex:none}
   .bar .track{flex:1;background:var(--green-100);border-radius:8px;height:22px;overflow:hidden}
@@ -78,11 +81,13 @@
 
     <div class="card">
       <h2>📊 คะแนนเฉลี่ยรายระบบ (เฉพาะผู้ที่ได้ชม)</h2>
+      <p class="hint">แต่ละแถบคือ <b>คะแนนความพึงพอใจเฉลี่ย (เต็ม 5)</b> ที่ลูกค้าให้ระบบนั้น · ตัวเลขท้ายแถบ <b>เช่น 4.20 (n=15)</b> = คะแนนเฉลี่ย 4.20 จากผู้ตอบ 15 คน (<b>n = จำนวนคนที่ให้คะแนนระบบนั้น</b>) · แถบยาว = คะแนนดี</p>
       <div id="modBars"></div>
     </div>
 
     <div class="card">
       <h2>🎯 ระบบที่ถูกเลือก "สนใจนำไปใช้" มากที่สุด</h2>
+      <p class="hint">นับว่ามีลูกค้ากี่รายเลือกระบบนั้นว่า "สนใจนำไปใช้" · ระบบที่มีจำนวนรายมากสุด = ที่ควรชูขายก่อน</p>
       <div id="interestBars"></div>
     </div>
 
@@ -162,9 +167,11 @@ function render(){
   const npsVals=rows.map(r=>r.nps).filter(v=>typeof v==='number');
   const avgNps=npsVals.length?(npsVals.reduce((a,b)=>a+b,0)/npsVals.length).toFixed(1):'—';
   document.getElementById('kpis').innerHTML=[
-    ['ผู้ประเมินทั้งหมด',rows.length],['สนใจ/ขอต่อยอด',withDemo],
-    ['ขอใบเสนอราคา/นัดหมาย',quote],['NPS เฉลี่ย (0–10)',avgNps],
-  ].map(k=>`<div class="kpi"><div class="v">${k[1]}</div><div class="l">${k[0]}</div></div>`).join('');
+    ['ผู้ประเมินทั้งหมด',rows.length,'จำนวนคนที่กรอกแบบประเมิน'],
+    ['สนใจ/ขอต่อยอด',withDemo,'คนที่เลือกระดับความสนใจ (ไม่ใช่ "ยังไม่สนใจ")'],
+    ['ขอใบเสนอราคา/นัดหมาย',quote,'คนที่ขอใบเสนอราคา นัดหมาย หรือทดลองใช้ = ลูกค้าที่ควรตามต่อ'],
+    ['NPS เฉลี่ย (0–10)',avgNps,'ค่าเฉลี่ยความอยากใช้ระบบ (ถามในข้อ 5) · 0=ไม่สนใจ 10=พร้อมใช้ · ยิ่งสูงยิ่งดี'],
+  ].map(k=>`<div class="kpi"><div class="v">${k[1]}</div><div class="l">${k[0]}</div><div class="sub">${k[2]}</div></div>`).join('');
 
   // module average ratings
   const mb=MODULES.map(m=>{
