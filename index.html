@@ -427,7 +427,7 @@ if(Q.get('modules')){Q.get('modules').split(',').forEach(k=>{
   const c=iGrid.querySelector(`input[data-key="${k.trim()}"]`);if(c){c.checked=true;}});refreshPrio();}
 
 /* ---- OPTIONAL: send to Google Apps Script / Sheet. Leave blank to store locally only. ---- */
-const ENDPOINT = ""; // e.g. "https://script.google.com/macros/s/XXXX/exec"
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbyJzI1N3o9mDUtoNLf-WKb3NTwFijnZPup8VxVeKwwsfOk84RFg9La2Qf8CL3kS3LfbvQ/exec";
 
 /* ---- Theme toggle (light/dark) — remembers choice; defaults to OS preference ---- */
 const themeBtn = document.getElementById('themeToggle');
