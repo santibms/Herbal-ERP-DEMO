@@ -14,14 +14,22 @@
     --border:#dbe6dd; --shadow:0 2px 14px rgba(20,53,31,.08);
     --radius:16px; --radius-sm:10px;
     --danger:#c0392b;
+    --dark-h2:var(--green-700);
   }
+  /* Dark palette shared by the OS-preference default AND the manual toggle */
   @media (prefers-color-scheme: dark){
-    :root{
+    :root:not([data-theme]){
       --bg:#0f1712; --card:#16211a; --text:#e7f0e9; --muted:#9db3a4;
       --border:#26362b; --green-100:#1d3327; --green-50:#16241b;
-      --shadow:0 2px 18px rgba(0,0,0,.4);
+      --shadow:0 2px 18px rgba(0,0,0,.4); --dark-h2:var(--green-500);
     }
   }
+  :root[data-theme="dark"]{
+    --bg:#0f1712; --card:#16211a; --text:#e7f0e9; --muted:#9db3a4;
+    --border:#26362b; --green-100:#1d3327; --green-50:#16241b;
+    --shadow:0 2px 18px rgba(0,0,0,.4); --dark-h2:var(--green-500);
+  }
+  /* [data-theme="light"] simply keeps the :root defaults, overriding OS dark */
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
@@ -45,8 +53,7 @@
   /* Card */
   .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
     box-shadow:var(--shadow);padding:20px 18px;margin-top:18px}
-  .card h2{margin:0 0 4px;font-size:20px;color:var(--green-700);display:flex;align-items:center;gap:9px}
-  @media (prefers-color-scheme: dark){.card h2{color:var(--green-500)}}
+  .card h2{margin:0 0 4px;font-size:20px;color:var(--dark-h2);display:flex;align-items:center;gap:9px}
   .card .hint{color:var(--muted);font-size:15.5px;margin:0 0 14px}
   .step{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;
     background:var(--green-700);color:#fff;border-radius:50%;font-size:15px;font-weight:700;padding:0 6px}
@@ -54,8 +61,10 @@
   label.fld{display:block;margin:12px 0 5px;font-weight:600;font-size:17px}
   label.fld .req{color:var(--danger)}
   input[type=text],input[type=tel],input[type=date],select,textarea{
-    width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
-    background:var(--card);color:var(--text);font:inherit;font-size:18px;transition:border-color .15s}
+    width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+    background:var(--card);color:var(--text);font:inherit;font-size:16px;transition:border-color .15s;
+    -webkit-appearance:none;appearance:none}
+  @media(min-width:561px){input[type=text],input[type=tel],input[type=date],select,textarea{font-size:18px}}
   input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green-600);
     box-shadow:0 0 0 3px var(--green-100)}
   textarea{min-height:84px;resize:vertical}
@@ -126,10 +135,48 @@
   footer{text-align:center;color:var(--muted);font-size:14px;margin-top:26px;padding:0 12px}
   .adminlink{color:var(--muted);text-decoration:none;font-size:13.5px}
   .required-note{color:var(--muted);font-size:14.5px;margin-top:2px}
+  /* Theme toggle (top-right of hero) */
+  .theme-toggle{position:absolute;top:14px;right:14px;z-index:5;
+    background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;
+    width:44px;height:44px;border-radius:50%;font-size:20px;cursor:pointer;line-height:1;
+    display:flex;align-items:center;justify-content:center;transition:background .15s;-webkit-tap-highlight-color:transparent}
+  .theme-toggle:hover{background:rgba(255,255,255,.3)}
+  .theme-toggle:active{transform:scale(.94)}
+  /* Data-destination banner */
+  .databanner{display:flex;gap:9px;align-items:flex-start;margin-top:14px;padding:11px 14px;
+    border-radius:var(--radius-sm);font-size:14.5px;line-height:1.45}
+  .databanner.central{background:var(--green-100);border:1px solid var(--green-600);color:var(--dark-h2)}
+  .databanner.local{background:#fdf6e3;border:1px solid var(--gold);color:#7a5c00}
+  :root[data-theme="dark"] .databanner.local{background:#2b2410;color:#e6c96a}
+  @media(prefers-color-scheme:dark){:root:not([data-theme]) .databanner.local{background:#2b2410;color:#e6c96a}}
+  .databanner .ic{flex:none;font-size:17px;line-height:1.3}
+  /* Mobile ergonomics */
+  @media(max-width:560px){
+    body{font-size:18px}
+    .wrap{padding:0 12px 90px}
+    .hero h1{font-size:23px}
+    .card{padding:16px 13px}
+    .stars button{padding:9px 0;min-width:52px}       /* bigger tap target */
+    .stars button .n{font-size:20px}
+    .nps button{padding:13px 0;min-width:38px;font-size:17px}
+    .chip span{padding:11px 16px}                       /* easier to tap */
+    .prio label,.modchip span{padding:14px 15px}
+    label.fld{font-size:18px}
+    /* sticky submit bar so users don't scroll to find the button */
+    .actions{position:sticky;bottom:0;background:linear-gradient(to top,var(--bg) 72%,transparent);
+      padding:12px 0 10px;margin-top:16px;z-index:4}
+    button.primary{padding:17px;font-size:19px}
+  }
+  @media(max-width:380px){
+    .stars{gap:4px}.stars button{min-width:44px;font-size:13px}
+    .stars button .t{font-size:11px}
+    .nps button{min-width:30px;padding:11px 0}
+  }
 </style>
 </head>
 <body>
 <header class="hero">
+  <button type="button" class="theme-toggle" id="themeToggle" aria-label="สลับโหมดสว่าง/มืด" title="สลับโหมดสว่าง/มืด">🌙</button>
   <div class="leaf">🌿</div>
   <h1>แบบประเมินหลังการสาธิตระบบ</h1>
   <div class="sub">ระบบ HERBAL ERP — Smart Innovation</div>
@@ -141,6 +188,9 @@
     ขอบคุณที่ร่วมรับชมการสาธิต 🙏 ความเห็นของท่านจะช่วยให้เราพัฒนาระบบให้ตรงกับความต้องการมากที่สุด
     <br/>ใช้เวลาประมาณ 2 นาที
   </p>
+
+  <!-- แจ้งผู้ใช้/เจ้าหน้าที่ว่าข้อมูลถูกส่งไปที่ใด (JS จะปรับข้อความตามว่าตั้ง ENDPOINT ไว้หรือยัง) -->
+  <div class="databanner" id="dataBanner" style="display:none"></div>
 
   <form id="ev">
 
@@ -274,7 +324,7 @@
   <div class="done card" id="done">
     <div class="big">🌿✅</div>
     <h2>ขอบคุณสำหรับความคิดเห็น!</h2>
-    <p style="color:var(--muted);font-size:17px">ทีมงาน Smart Innovation จะติดต่อกลับภายใน 1–3 วันทำการ</p>
+    <p id="doneMsg" style="color:var(--muted);font-size:17px">ทีมงาน Smart Innovation จะติดต่อกลับภายใน 1–3 วันทำการ</p>
     <div class="actions">
       <button type="button" class="ghost" id="againBtn">+ ประเมินรายใหม่</button>
     </div>
@@ -379,6 +429,41 @@ if(Q.get('modules')){Q.get('modules').split(',').forEach(k=>{
 /* ---- OPTIONAL: send to Google Apps Script / Sheet. Leave blank to store locally only. ---- */
 const ENDPOINT = ""; // e.g. "https://script.google.com/macros/s/XXXX/exec"
 
+/* ---- Theme toggle (light/dark) — remembers choice; defaults to OS preference ---- */
+const themeBtn = document.getElementById('themeToggle');
+function applyTheme(t){
+  if(t==='light'||t==='dark'){ document.documentElement.setAttribute('data-theme',t); }
+  else { document.documentElement.removeAttribute('data-theme'); } // follow OS
+  const isDark = t==='dark' || (t!=='light' && matchMedia('(prefers-color-scheme: dark)').matches);
+  themeBtn.textContent = isDark ? '☀️' : '🌙';
+  themeBtn.title = isDark ? 'สลับเป็นโหมดสว่าง' : 'สลับเป็นโหมดมืด';
+}
+let savedTheme = null;
+try{ savedTheme = localStorage.getItem('herbal_theme'); }catch(_){}
+applyTheme(savedTheme || 'auto');
+themeBtn.addEventListener('click',()=>{
+  const cur = document.documentElement.getAttribute('data-theme');
+  const osDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const nowDark = cur==='dark' || (!cur && osDark);
+  const next = nowDark ? 'light' : 'dark';
+  try{ localStorage.setItem('herbal_theme', next); }catch(_){}
+  applyTheme(next);
+});
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{
+  if(!document.documentElement.getAttribute('data-theme')) applyTheme('auto');
+});
+
+/* ---- Data-destination banner: tell everyone WHERE the answers go ---- */
+const banner = document.getElementById('dataBanner');
+if(ENDPOINT){
+  banner.className='databanner central';
+  banner.innerHTML='<span class="ic">☁️</span><span>ข้อมูลจะถูกส่งเข้าฐานข้อมูลส่วนกลาง (Google Sheet) ของทีมงานโดยอัตโนมัติ ทีมงานจะเห็นทันทีที่ท่านกดส่ง</span>';
+}else{
+  banner.className='databanner local';
+  banner.innerHTML='<span class="ic">⚠️</span><span><b>โหมดทดสอบ:</b> ยังไม่ได้ตั้งค่าฐานข้อมูลส่วนกลาง ข้อมูลจะถูกเก็บไว้ใน<u>เครื่องนี้เท่านั้น</u> (ดูได้ที่หน้าเจ้าหน้าที่บนเครื่องเดียวกัน)</span>';
+}
+banner.style.display='flex';
+
 function showErr(id,on){const e=document.getElementById(id);if(e)e.classList.toggle('show',on);}
 
 document.getElementById('ev').addEventListener('submit',async e=>{
@@ -413,11 +498,17 @@ document.getElementById('ev').addEventListener('submit',async e=>{
   localStorage.setItem(KEY, JSON.stringify(all));
 
   const btn=document.getElementById('submitBtn'); btn.disabled=true; btn.textContent='กำลังส่ง…';
+  let sentCentral=false;
   if(ENDPOINT){
     try{ await fetch(ENDPOINT,{method:'POST',mode:'no-cors',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)}); }
+      headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)});
+      sentCentral=true; }
     catch(err){ /* saved locally regardless */ }
   }
+  // reflect where it landed
+  document.getElementById('doneMsg').textContent = sentCentral
+    ? 'ส่งเข้าฐานข้อมูลส่วนกลางเรียบร้อย — ทีมงาน Smart Innovation จะติดต่อกลับภายใน 1–3 วันทำการ'
+    : 'บันทึกเรียบร้อย — ทีมงาน Smart Innovation จะติดต่อกลับภายใน 1–3 วันทำการ';
   f.style.display='none';
   document.querySelector('.actions').style.display='none';
   document.getElementById('done').style.display='block';

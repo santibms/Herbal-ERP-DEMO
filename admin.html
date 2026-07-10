@@ -8,9 +8,13 @@
   :root{--green-800:#1b4d2b;--green-700:#2e6b3e;--green-600:#3a8150;--green-100:#e6f2ea;
     --bg:#f4f7f4;--card:#fff;--text:#1d2a20;--muted:#5c6b5f;--border:#dbe6dd;--gold:#c9a227;
     --shadow:0 2px 14px rgba(20,53,31,.08)}
-  @media(prefers-color-scheme:dark){:root{--bg:#0f1712;--card:#16211a;--text:#e7f0e9;--muted:#9db3a4;--border:#26362b;--green-100:#1d3327}}
+  @media(prefers-color-scheme:dark){:root:not([data-theme]){--bg:#0f1712;--card:#16211a;--text:#e7f0e9;--muted:#9db3a4;--border:#26362b;--green-100:#1d3327}}
+  :root[data-theme="dark"]{--bg:#0f1712;--card:#16211a;--text:#e7f0e9;--muted:#9db3a4;--border:#26362b;--green-100:#1d3327}
   *{box-sizing:border-box}body{margin:0;font-family:"TH Sarabun New","Sarabun",-apple-system,"Segoe UI",system-ui,sans-serif;
     background:var(--bg);color:var(--text);font-size:17px}
+  .theme-toggle{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;
+    width:42px;height:42px;border-radius:50%;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+  .theme-toggle:active{transform:scale(.94)}
   .wrap{max-width:1180px;margin:0 auto;padding:0 14px 60px}
   header{background:linear-gradient(135deg,var(--green-800),var(--green-600));color:#fff;
     padding:20px;border-radius:0 0 22px 22px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
@@ -64,7 +68,10 @@
 <div id="app" style="display:none">
   <header>
     <h1>🌿 ผลแบบประเมินหลังการ Demo</h1>
-    <div class="muted" style="color:#dff">อัปเดตล่าสุด: <span id="upd">—</span></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="muted" style="color:#dff">อัปเดตล่าสุด: <span id="upd">—</span></div>
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="สลับโหมดสว่าง/มืด" title="สลับโหมดสว่าง/มืด">🌙</button>
+    </div>
   </header>
   <div class="wrap">
     <div class="kpis" id="kpis"></div>
@@ -101,6 +108,24 @@
 <script>
 const PASS="admin1234";
 const KEY="herbal_demo_eval";
+
+/* ---- Theme toggle (shares saved choice with the form) ---- */
+const themeBtn=document.getElementById('themeToggle');
+function applyTheme(t){
+  if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);
+  else document.documentElement.removeAttribute('data-theme');
+  const dark=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);
+  themeBtn.textContent=dark?'☀️':'🌙';
+}
+let st=null; try{st=localStorage.getItem('herbal_theme');}catch(_){}
+applyTheme(st||'auto');
+themeBtn.addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const osDark=matchMedia('(prefers-color-scheme: dark)').matches;
+  const next=(cur==='dark'||(!cur&&osDark))?'light':'dark';
+  try{localStorage.setItem('herbal_theme',next);}catch(_){}
+  applyTheme(next);
+});
 const MODULES=[
   {key:"warehouse",icon:"📦",name:"คลังสินค้า"},{key:"production",icon:"🏭",name:"การผลิต"},
   {key:"qc",icon:"🧪",name:"คุณภาพ (QC)"},{key:"gmp",icon:"✅",name:"คุณภาพ GMP"},
