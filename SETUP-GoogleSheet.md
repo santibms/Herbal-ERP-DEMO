@@ -1,53 +1,53 @@
 # คู่มือ: เก็บข้อมูลแบบประเมินลง Google Sheet
 
-ทำครั้งเดียว ~5 นาที หลังจากนี้ทุกคนที่กรอกฟอร์มจะถูกบันทึกเข้า Google Sheet เดียวกันอัตโนมัติ (แบบ real-time ไม่ต้อง export/import เอง)
+ทำครั้งเดียว ~5 นาที หลังจากนี้ทุกคนที่กรอกฟอร์ม (รวมถึงลูกค้าที่สแกน QR กรอกในมือถือตัวเอง) จะถูกบันทึกเข้า Google Sheet เดียวกันอัตโนมัติแบบ real-time — คุณเห็นข้อมูลทันทีจากที่ไหนก็ได้
+
+> **ทำไมต้องทำ:** ถ้ายังไม่ทำขั้นตอนนี้ ข้อมูลจะเก็บอยู่ในเบราว์เซอร์ของ*เครื่องที่กรอกเท่านั้น* — ถ้าลูกค้ากรอกในมือถือตัวเอง คุณจะไม่เห็นข้อมูลเลย ฟอร์มจะขึ้นแถบเหลืองเตือน "โหมดทดสอบ" จนกว่าจะตั้งค่าเสร็จ
 
 ---
 
-## ขั้นที่ 1 — สร้าง Google Sheet
-1. เข้า https://sheets.google.com → **สร้างสเปรดชีตเปล่า** 1 ไฟล์
-2. ตั้งชื่อไฟล์ เช่น `แบบประเมิน Demo Herbal ERP`
+## ขั้นที่ 1 — สร้างโปรเจกต์ Apps Script
+1. เข้า **https://script.google.com** → กด **New project** (โปรเจกต์ใหม่)
+2. ลบโค้ดตัวอย่าง `function myFunction() {}` ออกให้หมด
+3. เปิดไฟล์ **`google-apps-script.gs`** (อยู่ใน repo นี้) → คัดลอกทั้งหมด → วางลงไป
+4. กด **บันทึก** 💾 (ตั้งชื่อโปรเจกต์อะไรก็ได้ เช่น `Herbal Demo Eval`)
 
-## ขั้นที่ 2 — วางโค้ด Apps Script
-1. ในไฟล์ Sheet นั้น ไปที่เมนู **ส่วนขยาย (Extensions) → Apps Script**
-2. ลบโค้ดเดิม `function myFunction() {}` ออกให้หมด
-3. เปิดไฟล์ **`google-apps-script.gs`** (อยู่ใน repo นี้) คัดลอกทั้งหมด → วางลงไป
-4. กด **บันทึก** (ไอคอนแผ่นดิสก์ 💾)
+> โค้ดตั้งค่าปลายทางไว้แล้วเป็นโฟลเดอร์ Drive ของคุณ:
+> `19zQGPne37FRK8IuwoXG2_rDz-PnU3Zha`
+> (แก้ได้ที่ตัวแปร `DRIVE_FOLDER_ID` ด้านบนของโค้ด ถ้าต้องการเปลี่ยนโฟลเดอร์)
+
+## ขั้นที่ 2 — Run `setup()` ให้สร้าง Sheet อัตโนมัติ
+1. บนแถบเครื่องมือ เลือกฟังก์ชัน **`setup`** จาก dropdown (ข้างปุ่ม ▶ Run)
+2. กด **Run (▶)**
+3. ครั้งแรกจะขึ้น **Authorization required** → **Review permissions** → เลือกบัญชี Google ของคุณ
+   - ถ้าเจอ "Google hasn't verified this app" → **Advanced → Go to (ชื่อโปรเจกต์) (unsafe) → Allow**
+   (ปลอดภัย เพราะเป็นสคริปต์ของคุณเอง)
+4. เสร็จแล้วสคริปต์จะ **สร้างไฟล์ Sheet ชื่อ "แบบประเมิน Demo Herbal ERP" ไว้ในโฟลเดอร์ Drive ของคุณ** พร้อมหัวตารางครบ
+   - ดู log: เมนู **View → Logs** จะเห็นลิงก์ Sheet ที่สร้าง
 
 ## ขั้นที่ 3 — Deploy เป็น Web App
-1. มุมขวาบน กด **Deploy → New deployment**
-2. กดไอคอนเฟือง ⚙️ ข้าง "Select type" → เลือก **Web app**
+1. มุมขวาบน **Deploy → New deployment**
+2. กดเฟือง ⚙️ ข้าง "Select type" → เลือก **Web app**
 3. ตั้งค่า:
-   - **Description:** อะไรก็ได้ เช่น `demo-eval v1`
    - **Execute as:** `Me` (อีเมลของคุณ)
-   - **Who has access:** **Anyone** ⚠️ (สำคัญ — ถ้าไม่ใช่ Anyone ฟอร์มจะส่งข้อมูลไม่ได้)
-4. กด **Deploy**
-5. ครั้งแรกจะให้ **Authorize access** → เลือกบัญชี Google ของคุณ
-   - ถ้าเจอหน้า "Google hasn't verified this app" → กด **Advanced → Go to (ชื่อโปรเจกต์) (unsafe)** → **Allow**
-   (ปลอดภัย เพราะเป็นสคริปต์ของคุณเอง)
-6. คัดลอก **Web app URL** ที่ได้ (ลงท้ายด้วย `/exec`)
+   - **Who has access:** **Anyone** ⚠️ (สำคัญ — ถ้าไม่ใช่ Anyone ฟอร์มจะส่งข้อมูลไม่เข้า)
+4. กด **Deploy** → คัดลอก **Web app URL** (ลงท้ายด้วย `/exec`)
    ตัวอย่าง: `https://script.google.com/macros/s/AKfycb..../exec`
 
-## ขั้นที่ 4 — ใส่ URL ลงในฟอร์ม
-1. เปิดไฟล์ **`index.html`** หาบรรทัด (ประมาณกลางไฟล์ ใน `<script>`):
-   ```js
-   const ENDPOINT = ""; // e.g. "https://script.google.com/macros/s/XXXX/exec"
-   ```
-2. วาง URL ที่คัดลอกมา:
-   ```js
-   const ENDPOINT = "https://script.google.com/macros/s/AKfycb..../exec";
-   ```
-3. บันทึก แล้ว commit + push ขึ้น GitHub (หรือแจ้งผมให้ push ให้)
+## ขั้นที่ 4 — ส่ง URL มาให้ผมใส่ในฟอร์ม
+ส่ง Web app URL ที่ได้กลับมา → ผมจะใส่ในตัวแปร `ENDPOINT` ของ `index.html` แล้ว push ให้ทันที
+(หรือถ้าจะแก้เอง: เปิด `index.html` หาบรรทัด `const ENDPOINT = "";` แล้ววาง URL ลงในเครื่องหมายคำพูด → commit + push)
 
 ## ขั้นที่ 5 — ทดสอบ
-1. เปิดฟอร์มที่ https://santibms.github.io/Herbal-ERP-DEMO/ → กรอกทดลอง → กดส่ง
-2. กลับไปดู Google Sheet → จะมีชีตชื่อ **`DemoEvaluations`** พร้อมข้อมูลแถวใหม่โผล่ขึ้นมา ✅
+1. เปิดฟอร์ม → แถบด้านบนต้องเปลี่ยนเป็น **สีเขียว** "ข้อมูลจะถูกส่งเข้าฐานข้อมูลส่วนกลาง"
+2. กรอกทดลอง → กดส่ง
+3. เปิด Google Sheet ในโฟลเดอร์ → ชีต **`DemoEvaluations`** จะมีแถวใหม่โผล่ขึ้นมา ✅
 
 ---
 
 ## หมายเหตุสำคัญ
-- **ข้อมูลถูกเก็บ 2 ที่พร้อมกัน:** ทั้งใน Google Sheet และใน localStorage ของเครื่องที่กรอก
-  ดังนั้นแม้เน็ตหลุดชั่วขณะ ข้อมูลก็ยังอยู่ในเครื่อง และหน้า `admin.html` ยังใช้ดูได้
-- ฟอร์มส่งแบบ `no-cors` — เบราว์เซอร์จะ **ไม่แจ้ง error แม้ส่งสำเร็จ** เป็นเรื่องปกติ ให้ยืนยันจากการที่แถวขึ้นใน Sheet จริง
-- ถ้าแก้โค้ด `.gs` ภายหลัง ต้อง **Deploy → Manage deployments → แก้ deployment เดิม → Version: New version** (อย่าสร้าง deployment ใหม่ เพราะ URL จะเปลี่ยน)
-- อยากได้ Dashboard สรุปใน Sheet (กราฟ/pivot) แจ้งผมได้ เดี๋ยวเพิ่มให้
+- **ข้อมูลถูกเก็บ 2 ที่พร้อมกัน:** ทั้งใน Google Sheet และใน localStorage ของเครื่องที่กรอก — เน็ตหลุดชั่วขณะก็ไม่หาย
+- ฟอร์มส่งแบบ `no-cors` เบราว์เซอร์จะ **ไม่ฟ้อง error แม้ส่งสำเร็จ** เป็นปกติ ให้ยืนยันจากแถวที่ขึ้นใน Sheet จริง
+- **แก้โค้ด `.gs` ภายหลัง** ต้อง **Deploy → Manage deployments → แก้ deployment เดิม → Version: New version** (อย่าสร้าง deployment ใหม่ เพราะ URL จะเปลี่ยน ต้องมาแก้ ENDPOINT อีก)
+- ถ้า Run `setup()` ซ้ำ จะไม่สร้างไฟล์ใหม่ (จำ Spreadsheet ID ไว้แล้ว) — ปลอดภัย
+- อยากได้ Dashboard/กราฟสรุปในตัว Sheet (pivot, chart) แจ้งผมได้ เดี๋ยวเพิ่ม `setup` ให้สร้างให้เลย
