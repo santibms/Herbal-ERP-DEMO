@@ -132,9 +132,67 @@ function doPost(e) {
   }
 }
 
-// ให้ทดสอบเปิด URL ด้วย GET ได้ (เช็คว่า deploy ทำงาน)
-function doGet() {
-  return json_({ ok: true, service: 'Herbal ERP Demo Evaluation', time: new Date() });
+/**
+ * GET:
+ *   ?action=list                → คืนข้อมูลแบบประเมินทั้งหมด (ให้ admin.html ดึงไปแสดง)
+ *   ?action=list&callback=fnName → คืนเป็น JSONP (เลี่ยงปัญหา CORS บน GitHub Pages)
+ *   (ไม่ใส่ action)              → ping เช็คว่า deploy ทำงาน
+ */
+function doGet(e) {
+  const p = (e && e.parameter) || {};
+  let out;
+  if (p.action === 'list') {
+    try {
+      out = { ok: true, rows: listRows_() };
+    } catch (err) {
+      out = { ok: false, error: String(err) };
+    }
+  } else {
+    out = { ok: true, service: 'Herbal ERP Demo Evaluation', time: new Date() };
+  }
+  if (p.callback) {
+    return ContentService
+      .createTextOutput(p.callback + '(' + JSON.stringify(out) + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return json_(out);
+}
+
+// อ่านทุกแถวใน Sheet แล้วแปลงกลับเป็นรูปแบบเดียวกับที่ฟอร์มส่งมา
+function listRows_() {
+  const sh = getSheet_();
+  const last = sh.getLastRow();
+  if (last < 2) return [];
+  const n = HEADERS.length;
+  const vals = sh.getRange(2, 1, last - 1, n).getValues();
+  const disp = sh.getRange(2, 1, last - 1, n).getDisplayValues();
+
+  const iso = v => (v instanceof Date ? v.toISOString() : String(v || ''));
+  const num = v => (v === '' || v == null ? null : Number(v));
+  const list = s => String(s || '').split(' | ').map(x => x.trim()).filter(Boolean);
+
+  return vals.map((v, r) => {
+    const d = disp[r];
+    let i = 0;
+    const savedAt = iso(v[i++]);
+    const ts = iso(v[i++]) || savedAt;
+    const orgType = d[i++], org = d[i++], name = d[i++], role = d[i++], phone = d[i++];
+    const ratings = {};
+    MODULES.forEach(m => {
+      const raw = d[i++];
+      ratings[m[0]] = raw === 'ไม่ได้ดู' ? 0 : (raw === '' ? null : Number(raw));
+    });
+    const interest = d[i++], topPriority = d[i++], priorities = d[i++];
+    const nps = num(v[i++]), interestLevel = d[i++];
+    const followDate = d[i++], followTime = d[i++];
+    const improve = d[i++], missing = d[i++], pdpa = d[i++];
+    return {
+      ts, savedAt, orgType, org, name, role, phone, ratings,
+      interest: list(interest), topPriority, priorities: list(priorities),
+      nps, interestLevel, followDate, followTime, improve, missing,
+      pdpa: pdpa === 'ยินยอม',
+    };
+  });
 }
 
 function json_(obj) {

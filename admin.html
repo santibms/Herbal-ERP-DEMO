@@ -72,7 +72,10 @@
   <header>
     <h1>🌿 Herbal ERP — ผลแบบประเมินหลังการ Demo</h1>
     <div style="display:flex;align-items:center;gap:12px">
-      <div class="muted" style="color:#dff">อัปเดตล่าสุด: <span id="upd">—</span></div>
+      <div class="muted" style="color:#dff;text-align:right">
+        <div id="src">⏳ กำลังเชื่อม Google Sheet…</div>
+        <div style="font-size:12.5px;opacity:.85">อัปเดตล่าสุด: <span id="upd">—</span></div>
+      </div>
       <button type="button" class="theme-toggle" id="themeToggle" aria-label="สลับโหมดสว่าง/มืด" title="สลับโหมดสว่าง/มืด">🌙</button>
     </div>
   </header>
@@ -92,6 +95,7 @@
     </div>
 
     <div class="toolbar">
+      <button id="syncBtn">🔄 ดึงข้อมูลล่าสุดจาก Google Sheet</button>
       <button class="acc" id="csvBtn">⬇ ดาวน์โหลด CSV</button>
       <button id="jsonBtn">⬇ สำรองข้อมูล (JSON)</button>
       <button id="importBtn">⬆ นำเข้าข้อมูล (JSON)</button>
@@ -102,11 +106,11 @@
 
     <div class="card" style="padding:0;overflow:hidden">
       <div class="tblwrap"><table id="tbl"></table></div>
-      <div class="empty" id="empty" style="display:none">ยังไม่มีข้อมูลแบบประเมินในเครื่องนี้</div>
+      <div class="empty" id="empty" style="display:none">ยังไม่มีข้อมูลแบบประเมิน</div>
     </div>
     <p class="muted" style="margin-top:10px">
-      * ข้อมูลถูกเก็บใน localStorage ของเบราว์เซอร์เครื่องนี้ (ตามที่ตั้ง ENDPOINT ในหน้าแบบฟอร์ม)
-      หากใช้หลายเครื่อง ให้รวบรวมด้วยปุ่ม "สำรอง/นำเข้า JSON" หรือเชื่อม Google Sheet
+      * หน้านี้ดึงข้อมูลจาก <b>Google Sheet ส่วนกลาง</b> อัตโนมัติ (รีเฟรชทุก 1 นาที) จึงเห็นข้อมูลครบทุกอุปกรณ์ไม่ว่าเปิดจากเครื่องไหน
+      · หากเชื่อมไม่ได้ (ออฟไลน์) จะแสดงเฉพาะข้อมูลที่ค้างอยู่ในเบราว์เซอร์เครื่องนี้แทน
     </p>
   </div>
 </div>
@@ -114,6 +118,9 @@
 <script>
 const PASS="admin1234";
 const KEY="herbal_demo_eval";
+/* Web app URL เดียวกับที่ index.html ใช้ส่งข้อมูล (Apps Script /exec) */
+const ENDPOINT="https://script.google.com/macros/s/AKfycbyJzI1N3o9mDUtoNLf-WKb3NTwFijnZPup8VxVeKwwsfOk84RFg9La2Qf8CL3kS3LfbvQ/exec";
+const AUTO_REFRESH_MS=60000;  // ดึงข้อมูลใหม่อัตโนมัติทุก 1 นาที
 
 /* ---- Theme toggle (shares saved choice with the form) ---- */
 const themeBtn=document.getElementById('themeToggle');
@@ -148,18 +155,66 @@ function tryLogin(){
 document.getElementById('loginBtn').onclick=tryLogin;
 document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')tryLogin();});
 
-function load(){return JSON.parse(localStorage.getItem(KEY)||'[]');}
+function localRows(){try{return JSON.parse(localStorage.getItem(KEY)||'[]');}catch(_){return[];}}
 function esc(s){return String(s??'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
+
+/* ---- Google Sheet sync (JSONP — ใช้ได้บน GitHub Pages โดยไม่ติด CORS) ---- */
+let cloudRows=[];          // ข้อมูลจาก Google Sheet (ทุกเครื่อง ทุกอุปกรณ์)
+let cloudOk=false;
+let seq=0;
+
+function fetchCloud(){
+  return new Promise(resolve=>{
+    if(!ENDPOINT)return resolve(null);
+    const cb='__herbalCb'+(++seq);
+    const s=document.createElement('script');
+    const done=(val)=>{delete window[cb];clearTimeout(t);s.remove();resolve(val);};
+    window[cb]=res=>done(res&&res.ok?res.rows||[]:null);
+    const t=setTimeout(()=>done(null),15000);
+    s.onerror=()=>done(null);
+    s.src=ENDPOINT+'?action=list&callback='+cb+'&_='+Date.now();
+    document.body.appendChild(s);
+  });
+}
+
+/* รวมข้อมูล Sheet + เครื่องนี้ (กันซ้ำด้วย ts) — ถ้า Sheet ใช้ไม่ได้ ยังเห็นข้อมูลในเครื่อง */
+function load(){
+  const seen=new Set(), out=[];
+  [...cloudRows,...localRows()].forEach(r=>{
+    const k=String(r.ts||'')+'|'+String(r.phone||'');
+    if(seen.has(k))return;
+    seen.add(k);out.push(r);
+  });
+  return out.sort((a,b)=>new Date(a.ts)-new Date(b.ts));
+}
+
+async function sync(){
+  const src=document.getElementById('src');
+  const btn=document.getElementById('syncBtn');
+  src.textContent='⏳ กำลังดึงข้อมูลจาก Google Sheet…';
+  if(btn)btn.disabled=true;
+  const rows=await fetchCloud();
+  if(rows){cloudRows=rows;cloudOk=true;}
+  else{cloudOk=false;}
+  if(btn)btn.disabled=false;
+  render();
+}
 
 function show(){
   document.getElementById('gate').style.display='none';
   document.getElementById('app').style.display='block';
   render();
+  sync();
+  setInterval(sync,AUTO_REFRESH_MS);
 }
 
 function render(){
   const rows=load();
   document.getElementById('upd').textContent=new Date().toLocaleString('th-TH');
+  const only=Math.max(0,rows.length-cloudRows.length);
+  document.getElementById('src').innerHTML=cloudOk
+    ? `✅ เชื่อม Google Sheet แล้ว — ${cloudRows.length} รายการจากทุกอุปกรณ์`+(only?` (+${only} เฉพาะเครื่องนี้)`:'')
+    : `⚠️ ยังเชื่อม Google Sheet ไม่ได้ — แสดงเฉพาะข้อมูลในเครื่องนี้ (${rows.length})`;
 
   // KPIs
   const withDemo=rows.filter(r=>r.interestLevel && r.interestLevel!=='ยังไม่สนใจ').length;
@@ -232,6 +287,7 @@ function toCSV(rows){
 function dl(name,content,type){const b=new Blob([content],{type});const u=URL.createObjectURL(b);
   const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
 
+document.getElementById('syncBtn').onclick=sync;
 document.getElementById('csvBtn').onclick=()=>dl('demo-eval.csv',toCSV(load()),'text/csv;charset=utf-8');
 document.getElementById('jsonBtn').onclick=()=>dl('demo-eval-backup.json',JSON.stringify(load(),null,2),'application/json');
 document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
