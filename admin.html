@@ -49,6 +49,12 @@
   .bar .track{flex:1;background:var(--green-100);border-radius:8px;height:20px;overflow:hidden}
   .bar .fill{height:100%;background:var(--seq-3);border-radius:8px 4px 4px 8px}
   .hint .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:3px}
+  .bar.hit{cursor:pointer}
+  .bar.hit:hover .track{box-shadow:0 0 0 2px var(--green-600)}
+  .bar.hit:focus{outline:none}
+  .bar.hit:focus-visible .track{box-shadow:0 0 0 2px var(--green-800)}
+  .bar.on .nm{font-weight:700;color:var(--green-700)}
+  .drillnote{color:var(--muted);font-size:14px;margin:0 0 10px}
   .bar .val{width:80px;text-align:right;font-variant-numeric:tabular-nums;font-size:16px;color:var(--text);font-weight:600;flex:none}
   /* filter bar */
   .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -129,6 +135,7 @@
     <div class="kpis" id="kpis"></div>
 
     <div class="card">
+      <p class="drillnote">💡 กดที่แถบใดก็ได้ เพื่อดูว่าเป็นของหน่วยงานไหน — ตารางด้านล่างจะกรองให้ · กดซ้ำเพื่อยกเลิก</p>
       <div class="split">
         <div>
           <h3>📊 ลูกค้าให้คะแนนระบบไหนดีที่สุด</h3>
@@ -144,6 +151,7 @@
     </div>
 
     <div class="card">
+      <p class="drillnote">💡 กดที่แถบใดก็ได้ เพื่อดูว่าเป็นของหน่วยงานไหน — ตารางด้านล่างจะกรองให้ · กดซ้ำเพื่อยกเลิก</p>
       <div class="split">
         <div>
           <h3>📈 ความอยากใช้ระบบ</h3>
@@ -228,9 +236,42 @@ const STEPS=[
 /* ---- chart colours: the value picks the colour, never the row's position ---- */
 const scoreColor=a=>!a?'var(--muted)':a>=4?'var(--st-good)':a>=3?'var(--st-warn)':'var(--st-bad)';
 const shareColor=p=>p>=60?'var(--seq-4)':p>=40?'var(--seq-3)':p>=20?'var(--seq-2)':'var(--seq-1)';
-const barRow=(nm,pct,val,color,tip)=>`<div class="bar" title="${tip||''}"><div class="nm">${nm}</div>
+const barRow=(nm,pct,val,color,tip,drillSpec,on)=>`<div class="bar${drillSpec?' hit':''}${on?' on':''}"${
+  drillSpec?` data-drill="${esc(drillSpec)}" role="button" tabindex="0"`:''} title="${esc(tip||'')}"><div class="nm">${nm}</div>
   <div class="track"><div class="fill" style="width:${Math.max(0,Math.min(100,pct))}%;background:${color}"></div></div>
   <div class="val">${val}</div></div>`;
+
+/* who is behind a number — named on hover, listed in full on click */
+const who=list=>{
+  if(!list.length)return 'ยังไม่มีใคร';
+  const names=list.map(r=>r.org||r.name||'(ไม่ระบุชื่อ)');
+  return names.slice(0,6).join(' · ')+(names.length>6?` · …และอีก ${names.length-6} ราย`:'');
+};
+
+/* a bar click either drives a select that already exists, or sets this */
+let drill=null;
+function applyDrill(spec){
+  const [kind,a,b,label]=spec.split('|');
+  if(kind==='sel'){
+    const el=document.getElementById(a);
+    el.value=el.value===b?'':b;              // same bar twice = release
+  }else{
+    drill=(drill&&drill.kind===kind&&drill.a===a)?null:{kind,a,b,label};
+  }
+  fq2.value=fq.value;
+  render();
+  document.querySelector('.tbltools').scrollIntoView({behavior:'smooth',block:'start'});
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest?.('.bar[data-drill]');
+  if(b)applyDrill(b.dataset.drill);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  const b=e.target.closest?.('.bar[data-drill]');
+  if(!b)return;
+  e.preventDefault();applyDrill(b.dataset.drill);
+});
 
 /* ---- filter — applies to the whole page, not just the table ---- */
 const fq=document.getElementById('q'),fOrgType=document.getElementById('fOrgType'),
@@ -240,10 +281,14 @@ fMod.insertAdjacentHTML('beforeend',MODULES.map(m=>`<option value="${m.name}">${
 const fq2=document.getElementById('q2');
 [fq,fOrgType,fStep,fMod].forEach(el=>el.addEventListener('input',()=>{fq2.value=fq.value;render();}));
 fq2.addEventListener('input',()=>{fq.value=fq2.value;render();});
-const clearAll=()=>{fq.value='';fq2.value='';fOrgType.value='';fStep.value='';fMod.value='';render();};
+const clearAll=()=>{drill=null;fq.value='';fq2.value='';fOrgType.value='';fStep.value='';fMod.value='';render();};
 document.getElementById('clearFilter').onclick=clearAll;
 document.getElementById('clearFilter2').onclick=clearAll;
 function matches(r){
+  if(drill){
+    if(drill.kind==='rated'){const v=r.ratings?.[drill.a];if(!(typeof v==='number'&&v>0))return false;}
+    if(drill.kind==='nps'){const v=r.nps;if(typeof v!=='number'||v<+drill.a||v>+drill.b)return false;}
+  }
   if(fOrgType.value&&r.orgType!==fOrgType.value)return false;
   if(fStep.value&&(r.interestLevel||'')!==fStep.value)return false;
   if(fMod.value&&!(r.interest||[]).includes(fMod.value))return false;
@@ -320,12 +365,13 @@ function render(){
   const all=load();
   const rows=all.filter(matches);
   document.getElementById('upd').textContent=new Date().toLocaleString('th-TH');
+  const drillTxt=drill?` (${drill.label})`:'';
   const countHTML=!all.length?'ยังไม่มีข้อมูล'
-    :rows.length===all.length?`แสดงทั้งหมด <b>${all.length}</b> รายการ`
-    :`กำลังกรอง — พบ <b>${rows.length}</b> จาก ${all.length} รายการ · ทุกตัวเลขในหน้านี้นับเฉพาะผลที่กรองแล้ว`;
+    :rows.length===all.length&&!drill?`แสดงทั้งหมด <b>${all.length}</b> รายการ`
+    :`กำลังกรอง${drillTxt} — พบ <b>${rows.length}</b> จาก ${all.length} รายการ · ทุกตัวเลขในหน้านี้นับเฉพาะผลที่กรองแล้ว`;
   document.getElementById('fcount').innerHTML=countHTML;
   document.getElementById('fcount2').innerHTML=!all.length?''
-    :rows.length===all.length?`<b>${all.length}</b> รายการ`
+    :rows.length===all.length&&!drill?`<b>${all.length}</b> รายการ`
     :`พบ <b>${rows.length}</b> จาก ${all.length} รายการ`;
   const only=Math.max(0,all.length-cloudRows.length);
   document.getElementById('src').innerHTML=cloudOk
@@ -353,12 +399,17 @@ function render(){
   });
   // sorted, because 3.71 and 4.14 look the same length on a 0–5 axis
   mb.sort((a,b)=>b.avg-a.avg);
-  document.getElementById('modBars').innerHTML=mb.map(m=>barRow(
-    `${m.icon} ${m.name}`, m.avg/5*100,
-    m.avg?m.avg.toFixed(2):'—',
-    scoreColor(m.avg),
-    m.avg?`${m.name} — เฉลี่ย ${m.avg.toFixed(2)} เต็ม 5 จากผู้ให้คะแนน ${m.n} คน`:`${m.name} — ยังไม่มีใครให้คะแนน`
-  )).join('');
+  document.getElementById('modBars').innerHTML=mb.map(m=>{
+    const list=rows.filter(r=>typeof r.ratings?.[m.key]==='number'&&r.ratings[m.key]>0);
+    return barRow(
+      `${m.icon} ${m.name}`, m.avg/5*100,
+      m.avg?m.avg.toFixed(2):'—',
+      scoreColor(m.avg),
+      m.avg?`${m.name} — เฉลี่ย ${m.avg.toFixed(2)} เต็ม 5 · ผู้ให้คะแนน ${m.n} คน: ${who(list)}`
+           :`${m.name} — ยังไม่มีใครให้คะแนน`,
+      `rated|${m.key}||ผู้ที่ให้คะแนน ${m.name}`,
+      drill&&drill.kind==='rated'&&drill.a===m.key);
+  }).join('');
 
   // interest counts
   const ic={}; MODULES.forEach(m=>ic[m.name]=0);
@@ -366,12 +417,16 @@ function render(){
   // share of respondents, so the bar and its colour say the same thing
   const mi=MODULES.map(m=>({...m,n:ic[m.name],pct:rows.length?ic[m.name]/rows.length*100:0}))
                   .sort((a,b)=>b.n-a.n);
-  document.getElementById('interestBars').innerHTML=mi.map(m=>barRow(
-    `${m.icon} ${m.name}`, m.pct,
-    `${m.n} ราย`,
-    shareColor(m.pct),
-    `${m.name} — ${m.n} จาก ${rows.length} รายเลือกว่าสนใจนำไปใช้`
-  )).join('');
+  document.getElementById('interestBars').innerHTML=mi.map(m=>{
+    const list=rows.filter(r=>(r.interest||[]).includes(m.name));
+    return barRow(
+      `${m.icon} ${m.name}`, m.pct,
+      `${m.n} ราย`,
+      shareColor(m.pct),
+      `${m.name} — ${m.n} จาก ${rows.length} ราย: ${who(list)}`,
+      `sel|fMod|${m.name}|${m.name}`,
+      fMod.value===m.name);
+  }).join('');
 
   // ความอยากใช้ระบบ — ค่าเฉลี่ย และการกระจายตัว
   const npsNums=rows.map(r=>r.nps).filter(v=>typeof v==='number');
@@ -379,23 +434,26 @@ function render(){
   document.getElementById('npsAvg').textContent=npsAvgV===null?'—':npsAvgV.toFixed(1);
   document.getElementById('npsAvgSub').textContent=npsNums.length
     ?`เต็ม 10 · จากผู้ตอบ ${npsNums.length} คน`:'ยังไม่มีผู้ตอบข้อนี้';
-  const grpBar=(nm,n,den,color)=>{const pct=den?n/den*100:0;
+  const grpBar=(nm,list,den,color,spec,on)=>{const n=list.length,pct=den?n/den*100:0;
     return barRow(nm,pct,`${n} ราย`,color,
-      `${nm} — ${n} จาก ${den} คนที่ตอบข้อนี้`);};
+      `${nm} — ${n} จาก ${den} คน: ${who(list)}`,spec,on);};
+  const npsRows=rows.filter(r=>typeof r.nps==='number');
   document.getElementById('npsBars').innerHTML=[
-    ['พร้อมใช้ (9–10)',v=>v>=9,'var(--st-good)'],
-    ['สนใจ (7–8)',v=>v>=7&&v<=8,'var(--st-warn)'],
-    ['ยังไม่พร้อม (0–6)',v=>v<=6,'var(--st-bad)'],
-  ].map(([nm,t,c])=>grpBar(nm,npsNums.filter(t).length,npsNums.length,c)).join('');
+    ['พร้อมใช้ (9–10)',9,10,'var(--st-good)'],
+    ['สนใจ (7–8)',7,8,'var(--st-warn)'],
+    ['ยังไม่พร้อม (0–6)',0,6,'var(--st-bad)'],
+  ].map(([nm,lo,hi,c])=>grpBar(nm,npsRows.filter(r=>r.nps>=lo&&r.nps<=hi),npsNums.length,c,
+      `nps|${lo}|${hi}|${nm}`,drill&&drill.kind==='nps'&&drill.a===String(lo))).join('');
 
   // ขั้นตอนถัดไป — แต่ละคนเลือกได้ข้อเดียว สัดส่วนจึงรวมเป็น 100%
   const sc={};STEPS.forEach(([v])=>sc[v]=0);let sOther=0;
   rows.forEach(r=>{const v=(r.interestLevel||'').trim();if(v in sc)sc[v]++;else sOther++;});
   // the first three are the people to chase; the rest are colder
-  const stepRows=STEPS.map(([v,l],i)=>[l,sc[v],i<3?'var(--st-good)':i<5?'var(--st-warn)':'var(--st-bad)']);
-  if(sOther)stepRows.push(['ยังไม่ระบุ',sOther,'var(--muted)']);
+  const stepRows=STEPS.map(([v,l],i)=>[l,rows.filter(r=>(r.interestLevel||'').trim()===v),
+    i<3?'var(--st-good)':i<5?'var(--st-warn)':'var(--st-bad)',`sel|fStep|${v}|${l}`,fStep.value===v]);
+  if(sOther)stepRows.push(['ยังไม่ระบุ',rows.filter(r=>!(((r.interestLevel||'').trim()) in sc)),'var(--muted)','',false]);
   document.getElementById('nextBars').innerHTML=stepRows
-    .map(([l,n,c])=>grpBar(l,n,rows.length,c)).join('');
+    .map(([l,list,c,spec,on])=>grpBar(l,list,rows.length,c,spec,on)).join('');
 
   // table
   const empty=document.getElementById('empty'), tbl=document.getElementById('tbl');
