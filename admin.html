@@ -35,12 +35,12 @@
   /* kpis */
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:18px}
   .kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
-  .kpi .v{font-size:30px;font-weight:800;color:var(--green-700)}
-  .kpi .l{color:var(--muted);font-size:15px}
+  .kpi .v{font-size:38px;font-weight:800;color:var(--green-700);line-height:1.1}
+  .kpi .l{color:var(--muted);font-size:16px;margin-top:2px}
   .kpi .sub{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.35;opacity:.85}
   /* module bars */
   .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-top:18px;box-shadow:var(--shadow)}
-  .card h2{margin:0 0 4px;font-size:19px;color:var(--green-700)}
+  .card h2{margin:0 0 4px;font-size:21px;color:var(--green-700)}
   .card .hint{color:var(--muted);font-size:14px;margin:0 0 14px;line-height:1.45}
   .card .hint b{color:var(--green-700);font-weight:700}
   .bar{display:flex;align-items:center;gap:10px;margin:7px 0}
@@ -50,7 +50,7 @@
   .legend{display:flex;flex-wrap:wrap;gap:5px 16px;margin:0 0 13px;font-size:14px;color:var(--muted)}
   .legend span{display:inline-flex;align-items:center;gap:6px}
   .legend i{width:12px;height:12px;border-radius:3px;flex:none}
-  .bar .val{width:96px;text-align:right;font-variant-numeric:tabular-nums;font-size:15px;color:var(--muted);flex:none}
+  .bar .val{width:80px;text-align:right;font-variant-numeric:tabular-nums;font-size:16px;color:var(--text);font-weight:600;flex:none}
   /* filter bar */
   .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .filters input[type=search],.filters select{font:inherit;font-size:16px;padding:9px 12px;
@@ -64,8 +64,8 @@
   .split{display:grid;grid-template-columns:1fr 1fr;gap:26px}
   @media(max-width:860px){.split{grid-template-columns:1fr}}
   .split h3{margin:0 0 4px;font-size:18px;color:var(--green-700)}
-  .split .bar .nm{width:172px;font-size:15px}
-  .split .bar .val{width:112px}
+  .split .bar .nm{width:178px;font-size:16px}
+  .split .bar .val{width:76px}
   .bigavg{display:flex;align-items:baseline;gap:10px;margin:0 0 12px}
   .bigavg .n{font-size:34px;font-weight:800;color:var(--green-700);line-height:1}
   .bigavg .u{color:var(--muted);font-size:15px}
@@ -74,6 +74,12 @@
   .toolbar button{padding:10px 16px;font:inherit;font-size:16px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
   .toolbar button.acc{background:var(--green-700);color:#fff;border-color:var(--green-700)}
   .toolbar button.danger{color:#c0392b;border-color:#e0b4ad}
+  .tbltools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 14px 0}
+  .tbltools input[type=search]{flex:1;min-width:260px;font:inherit;font-size:16px;padding:9px 12px;
+    border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text)}
+  .tbltools button{padding:9px 15px;font:inherit;font-size:15px;border-radius:10px;
+    border:1.5px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+  .tbltools .fcount{margin-top:0;white-space:nowrap}
   .tblwrap{overflow-x:auto;margin-top:12px;border:1px solid var(--border);border-radius:12px}
   table{border-collapse:collapse;width:100%;min-width:1120px;font-size:15px}
   th,td{padding:9px 11px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
@@ -124,40 +130,33 @@
     <div class="kpis" id="kpis"></div>
 
     <div class="card">
-      <h2>📊 คะแนนเฉลี่ยรายระบบ (เฉพาะผู้ที่ได้ชม)</h2>
-      <p class="hint">แต่ละแถบคือ <b>คะแนนความพึงพอใจเฉลี่ย (เต็ม 5)</b> ที่ลูกค้าให้ระบบนั้น · ตัวเลขท้ายแถบ <b>เช่น 4.20 (n=15)</b> = คะแนนเฉลี่ย 4.20 จากผู้ตอบ 15 คน (<b>n = จำนวนคนที่ให้คะแนนระบบนั้น</b>) · <b>เรียงจากคะแนนสูงลงต่ำ</b> และ<b>สีบอกระดับคะแนน</b> เพราะแถบมักยาวใกล้กัน</p>
+      <h2>📊 ลูกค้าให้คะแนนระบบไหนดีที่สุด</h2>
+      <p class="hint">คะแนนเต็ม 5 · เรียงจากสูงลงต่ำ</p>
       <div class="legend">
-        <span><i style="background:var(--st-good)"></i>ดี — 4.00 ขึ้นไป</span>
-        <span><i style="background:var(--st-warn)"></i>พอใช้ — 3.00–3.99</span>
-        <span><i style="background:var(--st-bad)"></i>ควรปรับปรุง — ต่ำกว่า 3.00</span>
-        <span><i style="background:var(--muted)"></i>ยังไม่มีคะแนน</span>
+        <span><i style="background:var(--st-good)"></i>ดี 4.00 ขึ้นไป</span>
+        <span><i style="background:var(--st-warn)"></i>พอใช้ 3.00–3.99</span>
+        <span><i style="background:var(--st-bad)"></i>ควรปรับปรุง ต่ำกว่า 3.00</span>
       </div>
       <div id="modBars"></div>
     </div>
 
     <div class="card">
-      <h2>🎯 ระบบที่ถูกเลือก "สนใจนำไปใช้" มากที่สุด</h2>
-      <p class="hint">นับว่ามีลูกค้ากี่รายเลือกระบบนั้นว่า "สนใจนำไปใช้" · <b>ความยาวแถบและสี = สัดส่วนของผู้ตอบทั้งหมด</b> · เรียงจากมากไปน้อย ระบบบนสุด = ที่ควรชูขายก่อน</p>
-      <div class="legend">
-        <span><i style="background:var(--seq-4)"></i>60% ขึ้นไป</span>
-        <span><i style="background:var(--seq-3)"></i>40–59%</span>
-        <span><i style="background:var(--seq-2)"></i>20–39%</span>
-        <span><i style="background:var(--seq-1)"></i>ต่ำกว่า 20%</span>
-      </div>
+      <h2>🎯 ระบบที่ลูกค้าอยากได้มากที่สุด</h2>
+      <p class="hint">จำนวนลูกค้าที่เลือกว่า "สนใจนำไปใช้" · เรียงจากมากไปน้อย</p>
       <div id="interestBars"></div>
     </div>
 
     <div class="card">
       <div class="split">
         <div>
-          <h3>📈 ความอยากใช้ระบบ (เฉลี่ย 0–10)</h3>
-          <p class="hint">คะแนนข้อ 5 · <b>0 = ยังไม่สนใจ, 10 = สนใจมาก พร้อมใช้</b> · ตัวเลขใหญ่คือค่าเฉลี่ยของทุกคนที่ตอบ แถบข้างล่างบอกว่าคะแนนกระจายตัวอย่างไร</p>
+          <h3>📈 ความอยากใช้ระบบ</h3>
+          <p class="hint">0 = ยังไม่สนใจ · 10 = พร้อมใช้</p>
           <div class="bigavg"><span class="n" id="npsAvg">—</span><span class="u" id="npsAvgSub">ยังไม่มีผู้ตอบข้อนี้</span></div>
           <div id="npsBars"></div>
         </div>
         <div>
-          <h3>📌 ขั้นตอนถัดไปที่ลูกค้าเลือก</h3>
-          <p class="hint">นับจากข้อ "ระดับความสนใจ / ขั้นตอนที่ต้องการ" · แต่ละคนเลือกได้ 1 ข้อ · <b>สามแถวบนคือคนที่ควรตามต่อก่อน</b></p>
+          <h3>📌 ลูกค้าอยากให้ทำอะไรต่อ</h3>
+          <p class="hint">เลือกได้คนละ 1 ข้อ · แถวบน = ควรตามต่อก่อน</p>
           <div id="nextBars"></div>
         </div>
       </div>
@@ -174,6 +173,11 @@
     </div>
 
     <div class="card" style="padding:0;overflow:hidden">
+      <div class="tbltools">
+        <input type="search" id="q2" placeholder="🔍 ค้นหาในตาราง — หน่วยงาน / ผู้ประเมิน / เบอร์โทร / ข้อความ" autocomplete="off"/>
+        <span class="fcount" id="fcount2"></span>
+        <button type="button" id="clearFilter2">ล้างตัวกรอง</button>
+      </div>
       <div class="tblwrap"><table id="tbl"></table></div>
       <div class="empty" id="empty" style="display:none">ยังไม่มีข้อมูลแบบประเมิน</div>
     </div>
@@ -236,10 +240,12 @@ const fq=document.getElementById('q'),fOrgType=document.getElementById('fOrgType
       fStep=document.getElementById('fStep'),fMod=document.getElementById('fMod');
 fStep.insertAdjacentHTML('beforeend',STEPS.map(([v,l])=>`<option value="${v}">${l}</option>`).join(''));
 fMod.insertAdjacentHTML('beforeend',MODULES.map(m=>`<option value="${m.name}">${m.icon} ${m.name}</option>`).join(''));
-[fq,fOrgType,fStep,fMod].forEach(el=>el.addEventListener('input',()=>render()));
-document.getElementById('clearFilter').onclick=()=>{
-  fq.value='';fOrgType.value='';fStep.value='';fMod.value='';render();
-};
+const fq2=document.getElementById('q2');
+[fq,fOrgType,fStep,fMod].forEach(el=>el.addEventListener('input',()=>{fq2.value=fq.value;render();}));
+fq2.addEventListener('input',()=>{fq.value=fq2.value;render();});
+const clearAll=()=>{fq.value='';fq2.value='';fOrgType.value='';fStep.value='';fMod.value='';render();};
+document.getElementById('clearFilter').onclick=clearAll;
+document.getElementById('clearFilter2').onclick=clearAll;
 function matches(r){
   if(fOrgType.value&&r.orgType!==fOrgType.value)return false;
   if(fStep.value&&(r.interestLevel||'')!==fStep.value)return false;
@@ -317,9 +323,13 @@ function render(){
   const all=load();
   const rows=all.filter(matches);
   document.getElementById('upd').textContent=new Date().toLocaleString('th-TH');
-  document.getElementById('fcount').innerHTML=!all.length?'ยังไม่มีข้อมูล'
+  const countHTML=!all.length?'ยังไม่มีข้อมูล'
     :rows.length===all.length?`แสดงทั้งหมด <b>${all.length}</b> รายการ`
     :`กำลังกรอง — พบ <b>${rows.length}</b> จาก ${all.length} รายการ · ทุกตัวเลขในหน้านี้นับเฉพาะผลที่กรองแล้ว`;
+  document.getElementById('fcount').innerHTML=countHTML;
+  document.getElementById('fcount2').innerHTML=!all.length?''
+    :rows.length===all.length?`<b>${all.length}</b> รายการ`
+    :`พบ <b>${rows.length}</b> จาก ${all.length} รายการ`;
   const only=Math.max(0,all.length-cloudRows.length);
   document.getElementById('src').innerHTML=cloudOk
     ? `✅ เชื่อม Google Sheet แล้ว — ${cloudRows.length} รายการจากทุกอุปกรณ์`+(only?` (+${only} เฉพาะเครื่องนี้)`:'')
@@ -330,12 +340,13 @@ function render(){
   const quote=rows.filter(r=>r.interestLevel==='ต้องการใบเสนอราคา'||r.interestLevel==='นัดหมายดูรายละเอียด'||r.interestLevel==='ขอทดลองใช้งาน').length;
   const npsVals=rows.map(r=>r.nps).filter(v=>typeof v==='number');
   const avgNps=npsVals.length?(npsVals.reduce((a,b)=>a+b,0)/npsVals.length).toFixed(1):'—';
+  // the long explanation lives in the tooltip now, not on the slide
   document.getElementById('kpis').innerHTML=[
-    ['ผู้ประเมินทั้งหมด',rows.length,'จำนวนคนที่กรอกแบบประเมิน'],
-    ['สนใจ/ขอต่อยอด',withDemo,'คนที่เลือกระดับความสนใจ (ไม่ใช่ "ยังไม่สนใจ")'],
-    ['ขอใบเสนอราคา/นัดหมาย',quote,'คนที่ขอใบเสนอราคา นัดหมาย หรือทดลองใช้ = ลูกค้าที่ควรตามต่อ'],
-    ['NPS เฉลี่ย (0–10)',avgNps,'ค่าเฉลี่ยความอยากใช้ระบบ (ถามในข้อ 5) · 0=ไม่สนใจ 10=พร้อมใช้ · ยิ่งสูงยิ่งดี'],
-  ].map(k=>`<div class="kpi"><div class="v">${k[1]}</div><div class="l">${k[0]}</div><div class="sub">${k[2]}</div></div>`).join('');
+    ['ลูกค้าที่ให้ความเห็น',rows.length,'จำนวนคนที่กรอกแบบประเมิน'],
+    ['สนใจนำไปใช้',withDemo,'คนที่เลือกระดับความสนใจ (ไม่ใช่ "ยังไม่สนใจ")'],
+    ['ควรตามต่อ',quote,'คนที่ขอใบเสนอราคา นัดหมาย หรือทดลองใช้'],
+    ['อยากใช้ระบบ (เต็ม 10)',avgNps,'ค่าเฉลี่ยความอยากใช้ระบบ (ข้อ 5) · 0=ไม่สนใจ 10=พร้อมใช้'],
+  ].map(k=>`<div class="kpi" title="${k[2]}"><div class="v">${k[1]}</div><div class="l">${k[0]}</div></div>`).join('');
 
   // module average ratings
   const mb=MODULES.map(m=>{
@@ -347,7 +358,7 @@ function render(){
   mb.sort((a,b)=>b.avg-a.avg);
   document.getElementById('modBars').innerHTML=mb.map(m=>barRow(
     `${m.icon} ${m.name}`, m.avg/5*100,
-    `${m.avg?m.avg.toFixed(2):'—'} <span class="muted">(n=${m.n})</span>`,
+    m.avg?m.avg.toFixed(2):'—',
     scoreColor(m.avg),
     m.avg?`${m.name} — เฉลี่ย ${m.avg.toFixed(2)} เต็ม 5 จากผู้ให้คะแนน ${m.n} คน`:`${m.name} — ยังไม่มีใครให้คะแนน`
   )).join('');
@@ -360,7 +371,7 @@ function render(){
                   .sort((a,b)=>b.n-a.n);
   document.getElementById('interestBars').innerHTML=mi.map(m=>barRow(
     `${m.icon} ${m.name}`, m.pct,
-    `${m.n} ราย <span class="muted">(${Math.round(m.pct)}%)</span>`,
+    `${m.n} ราย`,
     shareColor(m.pct),
     `${m.name} — ${m.n} จาก ${rows.length} รายเลือกว่าสนใจนำไปใช้`
   )).join('');
@@ -372,7 +383,7 @@ function render(){
   document.getElementById('npsAvgSub').textContent=npsNums.length
     ?`เต็ม 10 · จากผู้ตอบ ${npsNums.length} คน`:'ยังไม่มีผู้ตอบข้อนี้';
   const grpBar=(nm,n,den,color)=>{const pct=den?n/den*100:0;
-    return barRow(nm,pct,`${n} ราย <span class="muted">(${Math.round(pct)}%)</span>`,color,
+    return barRow(nm,pct,`${n} ราย`,color,
       `${nm} — ${n} จาก ${den} คนที่ตอบข้อนี้`);};
   document.getElementById('npsBars').innerHTML=[
     ['พร้อมใช้ (9–10)',v=>v>=9,'var(--st-good)'],
