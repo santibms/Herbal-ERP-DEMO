@@ -109,6 +109,7 @@
   <input type="password" id="pw" placeholder="รหัสผ่าน" autocomplete="off"/>
   <div class="gerr" id="gerr"></div>
   <button id="loginBtn">เข้าสู่ระบบ</button>
+  <div class="muted" style="margin-top:12px;font-size:13px">เวอร์ชัน <span class="bld"></span></div>
 </div>
 
 <div id="app" style="display:none">
@@ -192,16 +193,20 @@
     <p class="muted" style="margin-top:10px">
       * หน้านี้ดึงข้อมูลจาก <b>Google Sheet ส่วนกลาง</b> อัตโนมัติ (รีเฟรชทุก 1 นาที) จึงเห็นข้อมูลครบทุกอุปกรณ์ไม่ว่าเปิดจากเครื่องไหน
       · หากเชื่อมไม่ได้ (ออฟไลน์) จะแสดงเฉพาะข้อมูลที่ค้างอยู่ในเบราว์เซอร์เครื่องนี้แทน
+      · เวอร์ชัน <span class="bld"></span> — ถ้าเลขนี้ไม่ตรงกับที่ทีมแจ้ง ให้กด Ctrl+F5 หนึ่งครั้ง
     </p>
   </div>
 </div>
 
 <script>
+const BUILD="2026-09-24.7";
 const PASS="admin1234";
 const KEY="herbal_demo_eval";
 /* Web app URL เดียวกับที่ index.html ใช้ส่งข้อมูล (Apps Script /exec) */
 const ENDPOINT="https://script.google.com/macros/s/AKfycbyJzI1N3o9mDUtoNLf-WKb3NTwFijnZPup8VxVeKwwsfOk84RFg9La2Qf8CL3kS3LfbvQ/exec";
 const AUTO_REFRESH_MS=60000;  // ดึงข้อมูลใหม่อัตโนมัติทุก 1 นาที
+
+document.querySelectorAll('.bld').forEach(el=>el.textContent=BUILD);
 
 /* ---- Theme toggle (shares saved choice with the form) ---- */
 const themeBtn=document.getElementById('themeToggle');
