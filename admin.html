@@ -55,6 +55,8 @@
   .bar.hit:focus-visible .track{box-shadow:0 0 0 2px var(--green-800)}
   .bar.on .nm{font-weight:700;color:var(--green-700)}
   .drillnote{color:var(--muted);font-size:14px;margin:0 0 10px}
+  .drillchip{display:inline-flex;align-items:center;gap:8px;background:var(--green-100);color:var(--green-700);
+    border:1.5px solid var(--green-600);border-radius:999px;padding:6px 13px;font-size:15px;cursor:pointer;white-space:nowrap}
   .bar .val{width:80px;text-align:right;font-variant-numeric:tabular-nums;font-size:16px;color:var(--text);font-weight:600;flex:none}
   /* filter bar */
   .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -135,7 +137,7 @@
     <div class="kpis" id="kpis"></div>
 
     <div class="card">
-      <p class="drillnote">💡 กดที่แถบใดก็ได้ เพื่อดูว่าเป็นของหน่วยงานไหน — ตารางด้านล่างจะกรองให้ · กดซ้ำเพื่อยกเลิก</p>
+      <p class="drillnote">💡 กดที่แถบใดก็ได้ เพื่อดูว่าเป็นของหน่วยงานไหน — <b>กรองเฉพาะตารางด้านล่าง กราฟไม่เปลี่ยน</b> · กดซ้ำเพื่อยกเลิก</p>
       <div class="split">
         <div>
           <h3>📊 ลูกค้าให้คะแนนระบบไหนดีที่สุด</h3>
@@ -151,7 +153,7 @@
     </div>
 
     <div class="card">
-      <p class="drillnote">💡 กดที่แถบใดก็ได้ เพื่อดูว่าเป็นของหน่วยงานไหน — ตารางด้านล่างจะกรองให้ · กดซ้ำเพื่อยกเลิก</p>
+      <p class="drillnote">💡 กดที่แถบใดก็ได้ เพื่อดูว่าเป็นของหน่วยงานไหน — <b>กรองเฉพาะตารางด้านล่าง กราฟไม่เปลี่ยน</b> · กดซ้ำเพื่อยกเลิก</p>
       <div class="split">
         <div>
           <h3>📈 ความอยากใช้ระบบ</h3>
@@ -180,6 +182,7 @@
     <div class="card" style="padding:0;overflow:hidden">
       <div class="tbltools">
         <input type="search" id="q2" placeholder="🔍 ค้นหาในตาราง — หน่วยงาน / ผู้ประเมิน / เบอร์โทร / ข้อความ" autocomplete="off"/>
+        <span class="drillchip" id="drillchip" hidden></span>
         <span class="fcount" id="fcount2"></span>
         <button type="button" id="clearFilter2">ล้างตัวกรอง</button>
       </div>
@@ -248,19 +251,25 @@ const who=list=>{
   return names.slice(0,6).join(' · ')+(names.length>6?` · …และอีก ${names.length-6} ราย`:'');
 };
 
-/* a bar click either drives a select that already exists, or sets this */
+/* A bar click narrows the TABLE only — the charts above stay as the overview,
+   so nothing moves under the cursor. */
 let drill=null;
 function applyDrill(spec){
   const [kind,a,b,label]=spec.split('|');
-  if(kind==='sel'){
-    const el=document.getElementById(a);
-    el.value=el.value===b?'':b;              // same bar twice = release
-  }else{
-    drill=(drill&&drill.kind===kind&&drill.a===a)?null:{kind,a,b,label};
-  }
-  fq2.value=fq.value;
+  drill=(drill&&drill.kind===kind&&drill.a===a)?null:{kind,a,b,label};   // same bar twice = release
   render();
-  document.querySelector('.tbltools').scrollIntoView({behavior:'smooth',block:'start'});
+  if(drill)document.querySelector('.tbltools').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function inDrill(r){
+  if(!drill)return true;
+  if(drill.kind==='rated'){const v=r.ratings?.[drill.a];return typeof v==='number'&&v>0;}
+  if(drill.kind==='nps'){const v=r.nps;return typeof v==='number'&&v>=+drill.a&&v<=+drill.b;}
+  if(drill.kind==='interest')return (r.interest||[]).includes(drill.a);
+  if(drill.kind==='step'){
+    const v=(r.interestLevel||'').trim();
+    return drill.a==='__none__'?!STEPS.some(([x])=>x===v):v===drill.a;
+  }
+  return true;
 }
 document.addEventListener('click',e=>{
   const b=e.target.closest?.('.bar[data-drill]');
@@ -285,10 +294,6 @@ const clearAll=()=>{drill=null;fq.value='';fq2.value='';fOrgType.value='';fStep.
 document.getElementById('clearFilter').onclick=clearAll;
 document.getElementById('clearFilter2').onclick=clearAll;
 function matches(r){
-  if(drill){
-    if(drill.kind==='rated'){const v=r.ratings?.[drill.a];if(!(typeof v==='number'&&v>0))return false;}
-    if(drill.kind==='nps'){const v=r.nps;if(typeof v!=='number'||v<+drill.a||v>+drill.b)return false;}
-  }
   if(fOrgType.value&&r.orgType!==fOrgType.value)return false;
   if(fStep.value&&(r.interestLevel||'')!==fStep.value)return false;
   if(fMod.value&&!(r.interest||[]).includes(fMod.value))return false;
@@ -363,16 +368,20 @@ function show(){
 
 function render(){
   const all=load();
-  const rows=all.filter(matches);
+  const rows=all.filter(matches);   // filter row → KPIs and every chart
+  const shown=rows.filter(inDrill); // + a bar click → the table only
   document.getElementById('upd').textContent=new Date().toLocaleString('th-TH');
-  const drillTxt=drill?` (${drill.label})`:'';
   const countHTML=!all.length?'ยังไม่มีข้อมูล'
-    :rows.length===all.length&&!drill?`แสดงทั้งหมด <b>${all.length}</b> รายการ`
-    :`กำลังกรอง${drillTxt} — พบ <b>${rows.length}</b> จาก ${all.length} รายการ · ทุกตัวเลขในหน้านี้นับเฉพาะผลที่กรองแล้ว`;
+    :rows.length===all.length?`แสดงทั้งหมด <b>${all.length}</b> รายการ`
+    :`กำลังกรอง — พบ <b>${rows.length}</b> จาก ${all.length} รายการ · ทุกตัวเลขในหน้านี้นับเฉพาะผลที่กรองแล้ว`;
   document.getElementById('fcount').innerHTML=countHTML;
   document.getElementById('fcount2').innerHTML=!all.length?''
-    :rows.length===all.length&&!drill?`<b>${all.length}</b> รายการ`
-    :`พบ <b>${rows.length}</b> จาก ${all.length} รายการ`;
+    :drill?`<b>${shown.length}</b> จาก ${rows.length} รายการ`
+    :`<b>${rows.length}</b> รายการ`;
+  const chip=document.getElementById('drillchip');
+  chip.hidden=!drill;
+  if(drill){chip.innerHTML=`กำลังดู: <b>${esc(drill.label)}</b> ✕`;chip.title='กดเพื่อเลิกดูเฉพาะกลุ่มนี้';}
+  chip.onclick=()=>{drill=null;render();};
   const only=Math.max(0,all.length-cloudRows.length);
   document.getElementById('src').innerHTML=cloudOk
     ? `✅ เชื่อม Google Sheet แล้ว — ${cloudRows.length} รายการจากทุกอุปกรณ์`+(only?` (+${only} เฉพาะเครื่องนี้)`:'')
@@ -405,7 +414,7 @@ function render(){
       `${m.icon} ${m.name}`, m.avg/5*100,
       m.avg?m.avg.toFixed(2):'—',
       scoreColor(m.avg),
-      m.avg?`${m.name} — เฉลี่ย ${m.avg.toFixed(2)} เต็ม 5 · ผู้ให้คะแนน ${m.n} คน: ${who(list)}`
+      m.avg?`${m.name} — เฉลี่ย ${m.avg.toFixed(2)} เต็ม 5 · ผู้ให้คะแนน ${m.n} คน: ${who(list)} — กดเพื่อดูในตาราง`
            :`${m.name} — ยังไม่มีใครให้คะแนน`,
       `rated|${m.key}||ผู้ที่ให้คะแนน ${m.name}`,
       drill&&drill.kind==='rated'&&drill.a===m.key);
@@ -423,9 +432,9 @@ function render(){
       `${m.icon} ${m.name}`, m.pct,
       `${m.n} ราย`,
       shareColor(m.pct),
-      `${m.name} — ${m.n} จาก ${rows.length} ราย: ${who(list)}`,
-      `sel|fMod|${m.name}|${m.name}`,
-      fMod.value===m.name);
+      `${m.name} — ${m.n} จาก ${rows.length} ราย: ${who(list)} — กดเพื่อดูในตาราง`,
+      `interest|${m.name}||${m.name}`,
+      drill&&drill.kind==='interest'&&drill.a===m.name);
   }).join('');
 
   // ความอยากใช้ระบบ — ค่าเฉลี่ย และการกระจายตัว
@@ -436,7 +445,7 @@ function render(){
     ?`เต็ม 10 · จากผู้ตอบ ${npsNums.length} คน`:'ยังไม่มีผู้ตอบข้อนี้';
   const grpBar=(nm,list,den,color,spec,on)=>{const n=list.length,pct=den?n/den*100:0;
     return barRow(nm,pct,`${n} ราย`,color,
-      `${nm} — ${n} จาก ${den} คน: ${who(list)}`,spec,on);};
+      `${nm} — ${n} จาก ${den} คน: ${who(list)} — กดเพื่อดูในตาราง`,spec,on);};
   const npsRows=rows.filter(r=>typeof r.nps==='number');
   document.getElementById('npsBars').innerHTML=[
     ['พร้อมใช้ (9–10)',9,10,'var(--st-good)'],
@@ -450,21 +459,24 @@ function render(){
   rows.forEach(r=>{const v=(r.interestLevel||'').trim();if(v in sc)sc[v]++;else sOther++;});
   // the first three are the people to chase; the rest are colder
   const stepRows=STEPS.map(([v,l],i)=>[l,rows.filter(r=>(r.interestLevel||'').trim()===v),
-    i<3?'var(--st-good)':i<5?'var(--st-warn)':'var(--st-bad)',`sel|fStep|${v}|${l}`,fStep.value===v]);
-  if(sOther)stepRows.push(['ยังไม่ระบุ',rows.filter(r=>!(((r.interestLevel||'').trim()) in sc)),'var(--muted)','',false]);
+    i<3?'var(--st-good)':i<5?'var(--st-warn)':'var(--st-bad)',`step|${v}||${l}`,
+    drill&&drill.kind==='step'&&drill.a===v]);
+  if(sOther)stepRows.push(['ยังไม่ระบุ',rows.filter(r=>!(((r.interestLevel||'').trim()) in sc)),'var(--muted)',
+    'step|__none__||ยังไม่ระบุ',drill&&drill.kind==='step'&&drill.a==='__none__']);
   document.getElementById('nextBars').innerHTML=stepRows
     .map(([l,list,c,spec,on])=>grpBar(l,list,rows.length,c,spec,on)).join('');
 
   // table
   const empty=document.getElementById('empty'), tbl=document.getElementById('tbl');
-  if(!rows.length){
-    empty.textContent=all.length?'ไม่พบรายการที่ตรงกับตัวกรอง':'ยังไม่มีข้อมูลแบบประเมิน';
+  if(!shown.length){
+    empty.textContent=drill?'ไม่มีรายการในกลุ่มที่เลือก'
+      :all.length?'ไม่พบรายการที่ตรงกับตัวกรอง':'ยังไม่มีข้อมูลแบบประเมิน';
     empty.style.display='block';tbl.innerHTML='';return;
   }
   empty.style.display='none';
   const head=['เวลา','หน่วยงาน','ผู้ประเมิน','โทร','สนใจนำไปใช้','สำคัญสุด','NPS','ขั้นตอน','สิ่งที่อยากให้พัฒนา'];
   tbl.innerHTML='<tr><th class="c-no">ลำดับ</th>'+head.map(h=>`<th>${h}</th>`).join('')+'</tr>'+
-    rows.slice().reverse().map((r,i)=>`<tr>
+    shown.slice().reverse().map((r,i)=>`<tr>
       <td class="c-no">${i+1}</td>
       <td class="muted c-time">${esc(new Date(r.ts).toLocaleString('th-TH'))}</td>
       <td>${esc(r.org)}<br><span class="muted">${esc(r.orgType)}</span></td>
@@ -499,7 +511,7 @@ function dl(name,content,type){const b=new Blob([content],{type});const u=URL.cr
   const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
 
 document.getElementById('syncBtn').onclick=sync;
-document.getElementById('csvBtn').onclick=()=>dl('demo-eval.csv',toCSV(load().filter(matches)),'text/csv;charset=utf-8');
+document.getElementById('csvBtn').onclick=()=>dl('demo-eval.csv',toCSV(load().filter(matches).filter(inDrill)),'text/csv;charset=utf-8');
 document.getElementById('jsonBtn').onclick=()=>dl('demo-eval-backup.json',JSON.stringify(load(),null,2),'application/json');
 document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
 document.getElementById('importFile').onchange=e=>{
