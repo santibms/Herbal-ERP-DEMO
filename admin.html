@@ -10,9 +10,12 @@
 <style>
   :root{--green-800:#1b4d2b;--green-700:#2e6b3e;--green-600:#3a8150;--green-100:#e6f2ea;
     --bg:#f4f7f4;--card:#fff;--text:#1d2a20;--muted:#5c6b5f;--border:#dbe6dd;--gold:#c9a227;
-    --shadow:0 2px 14px rgba(20,53,31,.08)}
-  @media(prefers-color-scheme:dark){:root:not([data-theme]){--bg:#0f1712;--card:#16211a;--text:#e7f0e9;--muted:#9db3a4;--border:#26362b;--green-100:#1d3327}}
-  :root[data-theme="dark"]{--bg:#0f1712;--card:#16211a;--text:#e7f0e9;--muted:#9db3a4;--border:#26362b;--green-100:#1d3327}
+    --shadow:0 2px 14px rgba(20,53,31,.08);
+    /* chart colours — validated against this page's card surfaces */
+    --st-good:#0ca30c;--st-warn:#fab219;--st-bad:#d03b3b;
+    --seq-1:#6aa87f;--seq-2:#4f9369;--seq-3:#3a8150;--seq-4:#1b4d2b}
+  @media(prefers-color-scheme:dark){:root:not([data-theme]){--bg:#0f1712;--card:#16211a;--text:#e7f0e9;--muted:#9db3a4;--border:#26362b;--green-100:#1d3327;--seq-1:#3a8150;--seq-2:#4f9369;--seq-3:#6aa87f;--seq-4:#8fc2a1}}
+  :root[data-theme="dark"]{--bg:#0f1712;--card:#16211a;--text:#e7f0e9;--muted:#9db3a4;--border:#26362b;--green-100:#1d3327;--seq-1:#3a8150;--seq-2:#4f9369;--seq-3:#6aa87f;--seq-4:#8fc2a1}
   *{box-sizing:border-box}body{margin:0;font-family:"Sarabun","Noto Sans Thai",-apple-system,"Segoe UI",system-ui,sans-serif;
     background:var(--bg);color:var(--text);font-size:18px;line-height:1.5}
   .theme-toggle{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;
@@ -43,19 +46,42 @@
   .bar{display:flex;align-items:center;gap:10px;margin:7px 0}
   .bar .nm{width:150px;font-size:16px;flex:none}
   .bar .track{flex:1;background:var(--green-100);border-radius:8px;height:22px;overflow:hidden}
-  .bar .fill{height:100%;background:linear-gradient(90deg,var(--green-600),var(--green-700));border-radius:8px 0 0 8px}
+  .bar .fill{height:100%;background:var(--seq-3);border-radius:8px 4px 4px 8px}
+  .legend{display:flex;flex-wrap:wrap;gap:5px 16px;margin:0 0 13px;font-size:14px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:12px;height:12px;border-radius:3px;flex:none}
   .bar .val{width:96px;text-align:right;font-variant-numeric:tabular-nums;font-size:15px;color:var(--muted);flex:none}
+  /* filter bar */
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .filters input[type=search],.filters select{font:inherit;font-size:16px;padding:9px 12px;
+    border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text)}
+  .filters input[type=search]{flex:1;min-width:280px}
+  .filters button{padding:9px 15px;font:inherit;font-size:15px;border-radius:10px;
+    border:1.5px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+  .fcount{color:var(--muted);font-size:15px;margin-top:11px}
+  .fcount b{color:var(--green-700)}
+  /* two summaries side by side */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  @media(max-width:860px){.split{grid-template-columns:1fr}}
+  .split h3{margin:0 0 4px;font-size:18px;color:var(--green-700)}
+  .split .bar .nm{width:172px;font-size:15px}
+  .split .bar .val{width:112px}
+  .bigavg{display:flex;align-items:baseline;gap:10px;margin:0 0 12px}
+  .bigavg .n{font-size:34px;font-weight:800;color:var(--green-700);line-height:1}
+  .bigavg .u{color:var(--muted);font-size:15px}
   /* toolbar + table */
   .toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
   .toolbar button{padding:10px 16px;font:inherit;font-size:16px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
   .toolbar button.acc{background:var(--green-700);color:#fff;border-color:var(--green-700)}
   .toolbar button.danger{color:#c0392b;border-color:#e0b4ad}
   .tblwrap{overflow-x:auto;margin-top:12px;border:1px solid var(--border);border-radius:12px}
-  table{border-collapse:collapse;width:100%;min-width:1060px;font-size:15px}
+  table{border-collapse:collapse;width:100%;min-width:1120px;font-size:15px}
   th,td{padding:9px 11px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
   th{background:var(--green-100);position:sticky;top:0;font-size:14.5px;white-space:nowrap}
   tr:hover td{background:var(--green-100)}
-  td:first-child{white-space:nowrap}
+  th.c-no,td.c-no{width:58px;text-align:center;white-space:nowrap}
+  td.c-no{color:var(--muted);font-variant-numeric:tabular-nums}
+  td.c-time{white-space:nowrap}
   .pill{display:inline-block;background:var(--green-100);border-radius:999px;padding:1px 9px;font-size:13.5px;margin:1px 2px 1px 0}
   .empty{text-align:center;color:var(--muted);padding:40px}
   .muted{color:var(--muted);font-size:14px}
@@ -84,24 +110,63 @@
     </div>
   </header>
   <div class="wrap">
+    <div class="card">
+      <div class="filters">
+        <input type="search" id="q" placeholder="🔍 ค้นหา หน่วยงาน / ผู้ประเมิน / เบอร์โทร / ข้อความ" autocomplete="off"/>
+        <select id="fOrgType"><option value="">ทุกประเภทหน่วยงาน</option><option>โรงพยาบาล</option><option>โรงงาน/บริษัท</option><option>บุคคลทั่วไป</option></select>
+        <select id="fStep"><option value="">ทุกขั้นตอนถัดไป</option></select>
+        <select id="fMod"><option value="">ทุกระบบที่สนใจ</option></select>
+        <button type="button" id="clearFilter">ล้างตัวกรอง</button>
+      </div>
+      <div class="fcount" id="fcount"></div>
+    </div>
+
     <div class="kpis" id="kpis"></div>
 
     <div class="card">
       <h2>📊 คะแนนเฉลี่ยรายระบบ (เฉพาะผู้ที่ได้ชม)</h2>
-      <p class="hint">แต่ละแถบคือ <b>คะแนนความพึงพอใจเฉลี่ย (เต็ม 5)</b> ที่ลูกค้าให้ระบบนั้น · ตัวเลขท้ายแถบ <b>เช่น 4.20 (n=15)</b> = คะแนนเฉลี่ย 4.20 จากผู้ตอบ 15 คน (<b>n = จำนวนคนที่ให้คะแนนระบบนั้น</b>) · แถบยาว = คะแนนดี</p>
+      <p class="hint">แต่ละแถบคือ <b>คะแนนความพึงพอใจเฉลี่ย (เต็ม 5)</b> ที่ลูกค้าให้ระบบนั้น · ตัวเลขท้ายแถบ <b>เช่น 4.20 (n=15)</b> = คะแนนเฉลี่ย 4.20 จากผู้ตอบ 15 คน (<b>n = จำนวนคนที่ให้คะแนนระบบนั้น</b>) · <b>เรียงจากคะแนนสูงลงต่ำ</b> และ<b>สีบอกระดับคะแนน</b> เพราะแถบมักยาวใกล้กัน</p>
+      <div class="legend">
+        <span><i style="background:var(--st-good)"></i>ดี — 4.00 ขึ้นไป</span>
+        <span><i style="background:var(--st-warn)"></i>พอใช้ — 3.00–3.99</span>
+        <span><i style="background:var(--st-bad)"></i>ควรปรับปรุง — ต่ำกว่า 3.00</span>
+        <span><i style="background:var(--muted)"></i>ยังไม่มีคะแนน</span>
+      </div>
       <div id="modBars"></div>
     </div>
 
     <div class="card">
       <h2>🎯 ระบบที่ถูกเลือก "สนใจนำไปใช้" มากที่สุด</h2>
-      <p class="hint">นับว่ามีลูกค้ากี่รายเลือกระบบนั้นว่า "สนใจนำไปใช้" · ระบบที่มีจำนวนรายมากสุด = ที่ควรชูขายก่อน</p>
+      <p class="hint">นับว่ามีลูกค้ากี่รายเลือกระบบนั้นว่า "สนใจนำไปใช้" · <b>ความยาวแถบและสี = สัดส่วนของผู้ตอบทั้งหมด</b> · เรียงจากมากไปน้อย ระบบบนสุด = ที่ควรชูขายก่อน</p>
+      <div class="legend">
+        <span><i style="background:var(--seq-4)"></i>60% ขึ้นไป</span>
+        <span><i style="background:var(--seq-3)"></i>40–59%</span>
+        <span><i style="background:var(--seq-2)"></i>20–39%</span>
+        <span><i style="background:var(--seq-1)"></i>ต่ำกว่า 20%</span>
+      </div>
       <div id="interestBars"></div>
+    </div>
+
+    <div class="card">
+      <div class="split">
+        <div>
+          <h3>📈 ความอยากใช้ระบบ (เฉลี่ย 0–10)</h3>
+          <p class="hint">คะแนนข้อ 5 · <b>0 = ยังไม่สนใจ, 10 = สนใจมาก พร้อมใช้</b> · ตัวเลขใหญ่คือค่าเฉลี่ยของทุกคนที่ตอบ แถบข้างล่างบอกว่าคะแนนกระจายตัวอย่างไร</p>
+          <div class="bigavg"><span class="n" id="npsAvg">—</span><span class="u" id="npsAvgSub">ยังไม่มีผู้ตอบข้อนี้</span></div>
+          <div id="npsBars"></div>
+        </div>
+        <div>
+          <h3>📌 ขั้นตอนถัดไปที่ลูกค้าเลือก</h3>
+          <p class="hint">นับจากข้อ "ระดับความสนใจ / ขั้นตอนที่ต้องการ" · แต่ละคนเลือกได้ 1 ข้อ · <b>สามแถวบนคือคนที่ควรตามต่อก่อน</b></p>
+          <div id="nextBars"></div>
+        </div>
+      </div>
     </div>
 
     <div class="toolbar">
       <button id="syncBtn">🔄 ดึงข้อมูลล่าสุดจาก Google Sheet</button>
-      <button class="acc" id="csvBtn">⬇ ดาวน์โหลด CSV</button>
-      <button id="jsonBtn">⬇ สำรองข้อมูล (JSON)</button>
+      <button class="acc" id="csvBtn" title="ดาวน์โหลดเฉพาะรายการที่เห็นอยู่ (ตามตัวกรอง)">⬇ ดาวน์โหลด CSV</button>
+      <button id="jsonBtn" title="สำรองข้อมูลทั้งหมด ไม่สนใจตัวกรอง">⬇ สำรองข้อมูล (JSON)</button>
       <button id="importBtn">⬆ นำเข้าข้อมูล (JSON)</button>
       <input type="file" id="importFile" accept="application/json" style="display:none"/>
       <button onclick="location.href='./qr.html'">🔗 สร้างลิงก์/QR เฉพาะบริษัท</button>
@@ -149,6 +214,42 @@ const MODULES=[
   {key:"purchasing",icon:"🛒",name:"จัดซื้อ"},{key:"sales",icon:"💰",name:"ขาย"},
   {key:"hr",icon:"👥",name:"บุคลากร"},{key:"accounting",icon:"💳",name:"บัญชี"},
 ];
+
+const STEPS=[
+  ["ต้องการใบเสนอราคา","ขอใบเสนอราคา"],
+  ["นัดหมายดูรายละเอียด","นัดหมายดูรายละเอียด"],
+  ["ขอทดลองใช้งาน","ขอทดลองใช้ (Trial)"],
+  ["ต้องการสาธิต/นำเสนอเพิ่มเติม","สาธิตเพิ่มเติม"],
+  ["สอบถามข้อมูลเบื้องต้น","สอบถามเบื้องต้น"],
+  ["ยังไม่สนใจ","ยังไม่สนใจ"],
+];
+
+/* ---- chart colours: the value picks the colour, never the row's position ---- */
+const scoreColor=a=>!a?'var(--muted)':a>=4?'var(--st-good)':a>=3?'var(--st-warn)':'var(--st-bad)';
+const shareColor=p=>p>=60?'var(--seq-4)':p>=40?'var(--seq-3)':p>=20?'var(--seq-2)':'var(--seq-1)';
+const barRow=(nm,pct,val,color,tip)=>`<div class="bar" title="${tip||''}"><div class="nm">${nm}</div>
+  <div class="track"><div class="fill" style="width:${Math.max(0,Math.min(100,pct))}%;background:${color}"></div></div>
+  <div class="val">${val}</div></div>`;
+
+/* ---- filter — applies to the whole page, not just the table ---- */
+const fq=document.getElementById('q'),fOrgType=document.getElementById('fOrgType'),
+      fStep=document.getElementById('fStep'),fMod=document.getElementById('fMod');
+fStep.insertAdjacentHTML('beforeend',STEPS.map(([v,l])=>`<option value="${v}">${l}</option>`).join(''));
+fMod.insertAdjacentHTML('beforeend',MODULES.map(m=>`<option value="${m.name}">${m.icon} ${m.name}</option>`).join(''));
+[fq,fOrgType,fStep,fMod].forEach(el=>el.addEventListener('input',()=>render()));
+document.getElementById('clearFilter').onclick=()=>{
+  fq.value='';fOrgType.value='';fStep.value='';fMod.value='';render();
+};
+function matches(r){
+  if(fOrgType.value&&r.orgType!==fOrgType.value)return false;
+  if(fStep.value&&(r.interestLevel||'')!==fStep.value)return false;
+  if(fMod.value&&!(r.interest||[]).includes(fMod.value))return false;
+  const q=fq.value.trim().toLowerCase();
+  if(!q)return true;
+  const hay=[r.org,r.orgType,r.name,r.role,r.phone,r.topPriority,r.interestLevel,r.improve,r.missing,
+    (r.interest||[]).join(' '),(r.priorities||[]).join(' ')].join(' ').toLowerCase();
+  return q.split(/\s+/).every(t=>hay.includes(t));   // ทุกคำต้องเจอ
+}
 
 /* ---- gate ---- */
 function tryLogin(){
@@ -213,9 +314,13 @@ function show(){
 }
 
 function render(){
-  const rows=load();
+  const all=load();
+  const rows=all.filter(matches);
   document.getElementById('upd').textContent=new Date().toLocaleString('th-TH');
-  const only=Math.max(0,rows.length-cloudRows.length);
+  document.getElementById('fcount').innerHTML=!all.length?'ยังไม่มีข้อมูล'
+    :rows.length===all.length?`แสดงทั้งหมด <b>${all.length}</b> รายการ`
+    :`กำลังกรอง — พบ <b>${rows.length}</b> จาก ${all.length} รายการ · ทุกตัวเลขในหน้านี้นับเฉพาะผลที่กรองแล้ว`;
+  const only=Math.max(0,all.length-cloudRows.length);
   document.getElementById('src').innerHTML=cloudOk
     ? `✅ เชื่อม Google Sheet แล้ว — ${cloudRows.length} รายการจากทุกอุปกรณ์`+(only?` (+${only} เฉพาะเครื่องนี้)`:'')
     : `⚠️ ยังเชื่อม Google Sheet ไม่ได้ — แสดงเฉพาะข้อมูลในเครื่องนี้ (${rows.length})`;
@@ -238,28 +343,64 @@ function render(){
     const avg=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:0;
     return {...m,avg,n:vs.length};
   });
-  document.getElementById('modBars').innerHTML=mb.map(m=>`
-    <div class="bar"><div class="nm">${m.icon} ${m.name}</div>
-      <div class="track"><div class="fill" style="width:${m.avg/5*100}%"></div></div>
-      <div class="val">${m.avg?m.avg.toFixed(2):'—'} <span class="muted">(n=${m.n})</span></div></div>`).join('');
+  // sorted, because 3.71 and 4.14 look the same length on a 0–5 axis
+  mb.sort((a,b)=>b.avg-a.avg);
+  document.getElementById('modBars').innerHTML=mb.map(m=>barRow(
+    `${m.icon} ${m.name}`, m.avg/5*100,
+    `${m.avg?m.avg.toFixed(2):'—'} <span class="muted">(n=${m.n})</span>`,
+    scoreColor(m.avg),
+    m.avg?`${m.name} — เฉลี่ย ${m.avg.toFixed(2)} เต็ม 5 จากผู้ให้คะแนน ${m.n} คน`:`${m.name} — ยังไม่มีใครให้คะแนน`
+  )).join('');
 
   // interest counts
   const ic={}; MODULES.forEach(m=>ic[m.name]=0);
   rows.forEach(r=>(r.interest||[]).forEach(n=>{if(n in ic)ic[n]++;}));
-  const maxi=Math.max(1,...Object.values(ic));
-  document.getElementById('interestBars').innerHTML=MODULES.map(m=>`
-    <div class="bar"><div class="nm">${m.icon} ${m.name}</div>
-      <div class="track"><div class="fill" style="width:${ic[m.name]/maxi*100}%"></div></div>
-      <div class="val">${ic[m.name]} ราย</div></div>`).join('');
+  // share of respondents, so the bar and its colour say the same thing
+  const mi=MODULES.map(m=>({...m,n:ic[m.name],pct:rows.length?ic[m.name]/rows.length*100:0}))
+                  .sort((a,b)=>b.n-a.n);
+  document.getElementById('interestBars').innerHTML=mi.map(m=>barRow(
+    `${m.icon} ${m.name}`, m.pct,
+    `${m.n} ราย <span class="muted">(${Math.round(m.pct)}%)</span>`,
+    shareColor(m.pct),
+    `${m.name} — ${m.n} จาก ${rows.length} รายเลือกว่าสนใจนำไปใช้`
+  )).join('');
+
+  // ความอยากใช้ระบบ — ค่าเฉลี่ย และการกระจายตัว
+  const npsNums=rows.map(r=>r.nps).filter(v=>typeof v==='number');
+  const npsAvgV=npsNums.length?npsNums.reduce((a,b)=>a+b,0)/npsNums.length:null;
+  document.getElementById('npsAvg').textContent=npsAvgV===null?'—':npsAvgV.toFixed(1);
+  document.getElementById('npsAvgSub').textContent=npsNums.length
+    ?`เต็ม 10 · จากผู้ตอบ ${npsNums.length} คน`:'ยังไม่มีผู้ตอบข้อนี้';
+  const grpBar=(nm,n,den,color)=>{const pct=den?n/den*100:0;
+    return barRow(nm,pct,`${n} ราย <span class="muted">(${Math.round(pct)}%)</span>`,color,
+      `${nm} — ${n} จาก ${den} คนที่ตอบข้อนี้`);};
+  document.getElementById('npsBars').innerHTML=[
+    ['พร้อมใช้ (9–10)',v=>v>=9,'var(--st-good)'],
+    ['สนใจ (7–8)',v=>v>=7&&v<=8,'var(--st-warn)'],
+    ['ยังไม่พร้อม (0–6)',v=>v<=6,'var(--st-bad)'],
+  ].map(([nm,t,c])=>grpBar(nm,npsNums.filter(t).length,npsNums.length,c)).join('');
+
+  // ขั้นตอนถัดไป — แต่ละคนเลือกได้ข้อเดียว สัดส่วนจึงรวมเป็น 100%
+  const sc={};STEPS.forEach(([v])=>sc[v]=0);let sOther=0;
+  rows.forEach(r=>{const v=(r.interestLevel||'').trim();if(v in sc)sc[v]++;else sOther++;});
+  // the first three are the people to chase; the rest are colder
+  const stepRows=STEPS.map(([v,l],i)=>[l,sc[v],i<3?'var(--st-good)':i<5?'var(--st-warn)':'var(--st-bad)']);
+  if(sOther)stepRows.push(['ยังไม่ระบุ',sOther,'var(--muted)']);
+  document.getElementById('nextBars').innerHTML=stepRows
+    .map(([l,n,c])=>grpBar(l,n,rows.length,c)).join('');
 
   // table
   const empty=document.getElementById('empty'), tbl=document.getElementById('tbl');
-  if(!rows.length){empty.style.display='block';tbl.innerHTML='';return;}
+  if(!rows.length){
+    empty.textContent=all.length?'ไม่พบรายการที่ตรงกับตัวกรอง':'ยังไม่มีข้อมูลแบบประเมิน';
+    empty.style.display='block';tbl.innerHTML='';return;
+  }
   empty.style.display='none';
   const head=['เวลา','หน่วยงาน','ผู้ประเมิน','โทร','สนใจนำไปใช้','สำคัญสุด','NPS','ขั้นตอน','สิ่งที่อยากให้พัฒนา'];
-  tbl.innerHTML='<tr>'+head.map(h=>`<th>${h}</th>`).join('')+'</tr>'+
-    rows.slice().reverse().map(r=>`<tr>
-      <td class="muted">${esc(new Date(r.ts).toLocaleString('th-TH'))}</td>
+  tbl.innerHTML='<tr><th class="c-no">ลำดับ</th>'+head.map(h=>`<th>${h}</th>`).join('')+'</tr>'+
+    rows.slice().reverse().map((r,i)=>`<tr>
+      <td class="c-no">${i+1}</td>
+      <td class="muted c-time">${esc(new Date(r.ts).toLocaleString('th-TH'))}</td>
       <td>${esc(r.org)}<br><span class="muted">${esc(r.orgType)}</span></td>
       <td>${esc(r.name)}<br><span class="muted">${esc(r.role)}</span></td>
       <td>${esc(r.phone)}</td>
@@ -292,7 +433,7 @@ function dl(name,content,type){const b=new Blob([content],{type});const u=URL.cr
   const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
 
 document.getElementById('syncBtn').onclick=sync;
-document.getElementById('csvBtn').onclick=()=>dl('demo-eval.csv',toCSV(load()),'text/csv;charset=utf-8');
+document.getElementById('csvBtn').onclick=()=>dl('demo-eval.csv',toCSV(load().filter(matches)),'text/csv;charset=utf-8');
 document.getElementById('jsonBtn').onclick=()=>dl('demo-eval-backup.json',JSON.stringify(load(),null,2),'application/json');
 document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
 document.getElementById('importFile').onchange=e=>{
