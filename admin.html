@@ -4,18 +4,21 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>ผลแบบประเมิน Demo — เจ้าหน้าที่ | HERBAL ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
   :root{--green-800:#1b4d2b;--green-700:#2e6b3e;--green-600:#3a8150;--green-100:#e6f2ea;
     --bg:#f4f7f4;--card:#fff;--text:#1d2a20;--muted:#5c6b5f;--border:#dbe6dd;--gold:#c9a227;
     --shadow:0 2px 14px rgba(20,53,31,.08)}
   @media(prefers-color-scheme:dark){:root:not([data-theme]){--bg:#0f1712;--card:#16211a;--text:#e7f0e9;--muted:#9db3a4;--border:#26362b;--green-100:#1d3327}}
   :root[data-theme="dark"]{--bg:#0f1712;--card:#16211a;--text:#e7f0e9;--muted:#9db3a4;--border:#26362b;--green-100:#1d3327}
-  *{box-sizing:border-box}body{margin:0;font-family:"TH Sarabun New","Sarabun",-apple-system,"Segoe UI",system-ui,sans-serif;
-    background:var(--bg);color:var(--text);font-size:17px}
+  *{box-sizing:border-box}body{margin:0;font-family:"Sarabun","Noto Sans Thai",-apple-system,"Segoe UI",system-ui,sans-serif;
+    background:var(--bg);color:var(--text);font-size:18px;line-height:1.5}
   .theme-toggle{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;
     width:42px;height:42px;border-radius:50%;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
   .theme-toggle:active{transform:scale(.94)}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 14px 60px}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 14px 60px}
   header{background:linear-gradient(135deg,var(--green-800),var(--green-600));color:#fff;
     padding:20px;border-radius:0 0 22px 22px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
   header h1{margin:0;font-size:22px}
@@ -48,10 +51,11 @@
   .toolbar button.acc{background:var(--green-700);color:#fff;border-color:var(--green-700)}
   .toolbar button.danger{color:#c0392b;border-color:#e0b4ad}
   .tblwrap{overflow-x:auto;margin-top:12px;border:1px solid var(--border);border-radius:12px}
-  table{border-collapse:collapse;width:100%;min-width:900px;font-size:15px}
+  table{border-collapse:collapse;width:100%;min-width:1060px;font-size:15px}
   th,td{padding:9px 11px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
   th{background:var(--green-100);position:sticky;top:0;font-size:14.5px;white-space:nowrap}
   tr:hover td{background:var(--green-100)}
+  td:first-child{white-space:nowrap}
   .pill{display:inline-block;background:var(--green-100);border-radius:999px;padding:1px 9px;font-size:13.5px;margin:1px 2px 1px 0}
   .empty{text-align:center;color:var(--muted);padding:40px}
   .muted{color:var(--muted);font-size:14px}
