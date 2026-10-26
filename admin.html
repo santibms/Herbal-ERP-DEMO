@@ -164,7 +164,7 @@
         </div>
         <div>
           <h3>📌 ลูกค้าอยากให้ทำอะไรต่อ</h3>
-          <p class="hint">เลือกได้คนละ 1 ข้อ · แถวบน = ควรตามต่อก่อน</p>
+          <p class="hint">เลือกได้หลายข้อ · แถวบน = ควรตามต่อก่อน</p>
           <div id="nextBars"></div>
         </div>
       </div>
@@ -199,7 +199,7 @@
 </div>
 
 <script>
-const BUILD="2026-09-24.7";
+const BUILD="2026-10-26.1";
 const PASS="admin1234";
 const KEY="herbal_demo_eval";
 /* Web app URL เดียวกับที่ index.html ใช้ส่งข้อมูล (Apps Script /exec) */
@@ -232,6 +232,9 @@ const MODULES=[
   {key:"hr",icon:"👥",name:"บุคลากร"},{key:"accounting",icon:"💳",name:"บัญชี"},
 ];
 
+/* ขั้นตอนถัดไป: แบบใหม่เลือกได้หลายข้อ ส่งมาเป็น "ก, ข" ในช่องเดียว; แบบเก่ามีข้อเดียว */
+const levels=r=>String(r.interestLevel||'').split(',').map(s=>s.trim()).filter(Boolean);
+const knownLevel=r=>levels(r).some(x=>STEPS.some(([v])=>v===x));
 const STEPS=[
   ["ต้องการใบเสนอราคา","ขอใบเสนอราคา"],
   ["นัดหมายดูรายละเอียด","นัดหมายดูรายละเอียด"],
@@ -271,8 +274,7 @@ function inDrill(r){
   if(drill.kind==='nps'){const v=r.nps;return typeof v==='number'&&v>=+drill.a&&v<=+drill.b;}
   if(drill.kind==='interest')return (r.interest||[]).includes(drill.a);
   if(drill.kind==='step'){
-    const v=(r.interestLevel||'').trim();
-    return drill.a==='__none__'?!STEPS.some(([x])=>x===v):v===drill.a;
+    return drill.a==='__none__'?!knownLevel(r):levels(r).includes(drill.a);
   }
   return true;
 }
@@ -300,7 +302,7 @@ document.getElementById('clearFilter').onclick=clearAll;
 document.getElementById('clearFilter2').onclick=clearAll;
 function matches(r){
   if(fOrgType.value&&r.orgType!==fOrgType.value)return false;
-  if(fStep.value&&(r.interestLevel||'')!==fStep.value)return false;
+  if(fStep.value&&!levels(r).includes(fStep.value))return false;
   if(fMod.value&&!(r.interest||[]).includes(fMod.value))return false;
   const q=fq.value.trim().toLowerCase();
   if(!q)return true;
@@ -393,8 +395,8 @@ function render(){
     : `⚠️ ยังเชื่อม Google Sheet ไม่ได้ — แสดงเฉพาะข้อมูลในเครื่องนี้ (${rows.length})`;
 
   // KPIs
-  const withDemo=rows.filter(r=>r.interestLevel && r.interestLevel!=='ยังไม่สนใจ').length;
-  const quote=rows.filter(r=>r.interestLevel==='ต้องการใบเสนอราคา'||r.interestLevel==='นัดหมายดูรายละเอียด'||r.interestLevel==='ขอทดลองใช้งาน').length;
+  const withDemo=rows.filter(r=>levels(r).some(x=>x!=='ยังไม่สนใจ')).length;
+  const quote=rows.filter(r=>levels(r).some(x=>['ต้องการใบเสนอราคา','นัดหมายดูรายละเอียด','ขอทดลองใช้งาน'].includes(x))).length;
   const npsVals=rows.map(r=>r.nps).filter(v=>typeof v==='number');
   const avgNps=npsVals.length?(npsVals.reduce((a,b)=>a+b,0)/npsVals.length).toFixed(1):'—';
   // the long explanation lives in the tooltip now, not on the slide
@@ -459,14 +461,13 @@ function render(){
   ].map(([nm,lo,hi,c])=>grpBar(nm,npsRows.filter(r=>r.nps>=lo&&r.nps<=hi),npsNums.length,c,
       `nps|${lo}|${hi}|${nm}`,drill&&drill.kind==='nps'&&drill.a===String(lo))).join('');
 
-  // ขั้นตอนถัดไป — แต่ละคนเลือกได้ข้อเดียว สัดส่วนจึงรวมเป็น 100%
-  const sc={};STEPS.forEach(([v])=>sc[v]=0);let sOther=0;
-  rows.forEach(r=>{const v=(r.interestLevel||'').trim();if(v in sc)sc[v]++;else sOther++;});
+  // ขั้นตอนถัดไป — เลือกได้หลายข้อ แต่ละแถบคือสัดส่วนคนที่เลือกข้อนั้น (รวมกันอาจเกิน 100%)
+  const sOther=rows.filter(r=>!knownLevel(r)).length;
   // the first three are the people to chase; the rest are colder
-  const stepRows=STEPS.map(([v,l],i)=>[l,rows.filter(r=>(r.interestLevel||'').trim()===v),
+  const stepRows=STEPS.map(([v,l],i)=>[l,rows.filter(r=>levels(r).includes(v)),
     i<3?'var(--st-good)':i<5?'var(--st-warn)':'var(--st-bad)',`step|${v}||${l}`,
     drill&&drill.kind==='step'&&drill.a===v]);
-  if(sOther)stepRows.push(['ยังไม่ระบุ',rows.filter(r=>!(((r.interestLevel||'').trim()) in sc)),'var(--muted)',
+  if(sOther)stepRows.push(['ยังไม่ระบุ',rows.filter(r=>!knownLevel(r)),'var(--muted)',
     'step|__none__||ยังไม่ระบุ',drill&&drill.kind==='step'&&drill.a==='__none__']);
   document.getElementById('nextBars').innerHTML=stepRows
     .map(([l,list,c,spec,on])=>grpBar(l,list,rows.length,c,spec,on)).join('');
