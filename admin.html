@@ -277,7 +277,7 @@
 </div>
 
 <script>
-const BUILD="2026-10-30.1";
+const BUILD="2026-10-30.2";
 const PASS="admin1234";
 const KEY="herbal_demo_eval";
 /* Web app URL เดียวกับที่ index.html ใช้ส่งข้อมูล (Apps Script /exec) */
@@ -401,7 +401,7 @@ const fq=$('q'),fOrgType=$('fOrgType'),fRound=$('fRound');
 [fq,fOrgType,fRound].forEach(el=>el.addEventListener('input',render));
 $('clearFilter').onclick=()=>{drill=null;fq.value='';fOrgType.value='';fRound.value='';render();};
 function matches(r){
-  if(fRound.value&&dayKey(r.ts)!==fRound.value)return false;
+  if(fRound.value&&roundOf.get(keyOf(r))!==fRound.value)return false;
   if(fOrgType.value&&r.orgType!==fOrgType.value)return false;
   const q=fq.value.trim().toLowerCase();
   if(!q)return true;
@@ -410,26 +410,48 @@ function matches(r){
   return q.split(/\s+/).every(t=>hay.includes(t));   // ทุกคำต้องเจอ
 }
 
-/* one option per demo day, newest first: "30 ต.ค. 69 — รพ.พนัสนิคม (1 คน)" */
-let roundSig='';
+/* A demo is one organisation, and its people may answer over several days, so rounds go by
+   organisation, not by day: "15–16 ก.ย. 69 — คณะเภสัชศาสตร์ … (2 คน)", newest first.
+   The same organisation again after more than a week counts as a new demo. */
+const ROUND_GAP_MS=7*24*3600*1000;
+const orgKey=r=>shortOrg(r.org).replace(/\s+/g,'')||'?';
+const fmtRange=(a,b)=>{
+  const part=(t,o)=>new Date(t).toLocaleDateString('th-TH',{timeZone:TZ,...o});
+  if(fmtDay(a)===fmtDay(b))return fmtDay(b);
+  const my={month:'short',year:'2-digit'};
+  return part(a,part(a,my)===part(b,my)?{day:'numeric'}:{day:'numeric',month:'short'})+'–'+fmtDay(b);
+};
+let roundSig='', roundOf=new Map();   // row → its round
 function buildRounds(all){
-  const m=new Map();
-  all.forEach(r=>{
-    const k=dayKey(r.ts);if(!k)return;
-    const g=m.get(k)||{ts:r.ts,orgs:[],n:0};
-    g.n++;const o=shortOrg(r.org);if(o&&!g.orgs.includes(o))g.orgs.push(o);
-    m.set(k,g);
+  const byOrg=new Map();
+  all.forEach(r=>{           // load() sorts oldest first, so each list runs forward in time
+    if(!valid(new Date(r.ts)))return;
+    const k=orgKey(r);
+    if(!byOrg.has(k))byOrg.set(k,[]);
+    byOrg.get(k).push(r);
   });
-  const keys=[...m.keys()].sort().reverse();
-  const sig=all.length+'|'+keys.map(k=>k+':'+m.get(k).n+':'+m.get(k).orgs.join(',')).join(';');
+  const rounds=[];
+  byOrg.forEach((list,k)=>{
+    let cur=null;
+    list.forEach(r=>{
+      const t=new Date(r.ts).getTime();
+      if(!cur||t-cur.last>ROUND_GAP_MS){
+        cur={key:k+'|'+dayKey(r.ts),org:shortOrg(r.org)||'(ไม่ระบุหน่วยงาน)',first:t,last:t,rows:[]};
+        rounds.push(cur);
+      }
+      cur.last=t;cur.rows.push(r);
+    });
+  });
+  rounds.sort((a,b)=>b.last-a.last);
+  roundOf=new Map();
+  rounds.forEach(g=>g.rows.forEach(r=>roundOf.set(keyOf(r),g.key)));
+  const sig=all.length+'|'+rounds.map(g=>g.key+':'+g.rows.length).join(';');
   if(sig===roundSig)return;   // leave the open dropdown alone when nothing changed
   roundSig=sig;
   const cur=fRound.value;
-  fRound.innerHTML=`<option value="">ทุกรอบ (${all.length} คน)</option>`+keys.map(k=>{
-    const g=m.get(k);
-    return `<option value="${k}">${esc(fmtDay(g.ts))} — ${esc(g.orgs.slice(0,2).join(', '))}${g.orgs.length>2?' …':''} (${g.n} คน)</option>`;
-  }).join('');
-  fRound.value=keys.includes(cur)?cur:'';
+  fRound.innerHTML=`<option value="">ทุกรอบ (${all.length} คน)</option>`+rounds.map(g=>
+    `<option value="${esc(g.key)}">${esc(fmtRange(g.first,g.last))} — ${esc(g.org)} (${g.rows.length} คน)</option>`).join('');
+  fRound.value=rounds.some(g=>g.key===cur)?cur:'';
 }
 
 /* ---- gate ---- */
