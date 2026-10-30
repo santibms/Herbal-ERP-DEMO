@@ -53,20 +53,22 @@
   .sec-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .sec-n{background:var(--soft);border:1px solid var(--border);border-radius:999px;padding:1px 11px;font-size:14px;color:var(--muted)}
 
-  /* filters */
-  .filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;padding:14px 16px}
-  .fl{display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:var(--muted);min-width:220px}
-  .fl.grow{flex:1;min-width:240px}
-  .fl select,.fl input{font-size:16px;color:var(--text);background:var(--soft);border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;min-height:44px;max-width:100%}
+  /* filters: fixed columns, so a long demo name in the list cannot push the other fields around */
+  .filters{padding:14px 16px}
+  .f-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,5fr) minmax(0,4fr);gap:12px}
+  @media(max-width:820px){.f-row{grid-template-columns:minmax(0,1fr)}}
+  .fl{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted);min-width:0}
+  .fl select,.fl input{width:100%;height:44px;font-size:16px;color:var(--text);background:var(--soft);border:1.5px solid var(--border);border-radius:10px;padding:0 12px}
+  .f-now{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;margin-top:10px;font-size:15.5px;color:var(--muted)}
+  .f-now b{color:var(--text)}
+  .linkbtn{min-height:36px;background:none;border:0;padding:0 2px;color:var(--brand);font-weight:700;font-size:15.5px;text-decoration:underline;cursor:pointer}
   .btn{min-height:44px;padding:9px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:15.5px}
   .btn:hover{background:var(--soft)}
   .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
   .btn.danger{color:var(--bad)}
-  .fcount{margin:10px 2px 0!important;color:var(--muted);font-size:15px}
-  .fcount b{color:var(--text)}
 
   /* figure tiles */
-  .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:12px!important}
+  .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
   @media(max-width:1000px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
   .tile{border-radius:16px;padding:16px 18px;border:1px solid var(--border);border-left:5px solid var(--hue);
     background:color-mix(in srgb,var(--hue) 6%,var(--card));box-shadow:var(--shadow);min-width:0}
@@ -174,7 +176,6 @@
     .ttl h1{font-size:19px}
     .sync{font-size:13px;padding:5px 10px}
     .card{padding:16px}
-    .fl{min-width:100%}
     .tile{padding:14px}
     .tile .v{font-size:32px}
     .follow{grid-template-columns:1fr}
@@ -212,17 +213,18 @@
 
   <main class="wrap">
     <section class="card filters">
-      <label class="fl"><span>รอบ Demo</span><select id="fRound"><option value="">ทุกรอบ</option></select></label>
-      <label class="fl"><span>ประเภทหน่วยงาน</span>
-        <select id="fOrgType"><option value="">ทุกประเภท</option><option>โรงพยาบาล</option><option>โรงงาน/บริษัท</option><option>บุคคลทั่วไป</option></select></label>
-      <label class="fl grow"><span>ค้นหา</span><input type="search" id="q" placeholder="หน่วยงาน ผู้ประเมิน เบอร์โทร หรือข้อความ" autocomplete="off"/></label>
-      <button type="button" class="btn" id="clearFilter">ล้างตัวกรอง</button>
+      <div class="f-row">
+        <label class="fl"><span>ประเภทหน่วยงาน</span>
+          <select id="fOrgType"><option value="">ทุกประเภท</option><option>โรงพยาบาล</option><option>โรงงาน/บริษัท</option><option>บุคคลทั่วไป</option></select></label>
+        <label class="fl"><span>รอบ Demo</span><select id="fRound"><option value="">ทุกรอบ</option></select></label>
+        <label class="fl"><span>ค้นหา</span><input type="search" id="q" placeholder="หน่วยงาน ผู้ประเมิน เบอร์โทร หรือข้อความ" autocomplete="off"/></label>
+      </div>
+      <div class="f-now" id="fNow" hidden><span id="fcount"></span><button type="button" class="linkbtn" id="clearFilter">ดูทั้งหมด</button></div>
     </section>
-    <p class="fcount" id="fcount"></p>
 
     <section class="tiles" id="kpis"></section>
 
-    <section class="card">
+    <section class="card" id="followCard">
       <div class="sec-h"><h2>📞 ควรติดต่อกลับ</h2><span class="sec-n" id="followN"></span></div>
       <p class="hint">คนที่ขอให้ทีมติดต่อต่อ · ขอใบเสนอราคา นัดหมาย หรือทดลองใช้ ขึ้นก่อน</p>
       <div class="follow" id="follow"></div>
@@ -247,7 +249,7 @@
       </div>
     </section>
 
-    <section class="card">
+    <section class="card" id="voiceCard">
       <div class="sec-h"><h2>💬 ความเห็นจากลูกค้า</h2><span class="sec-n" id="voiceN"></span></div>
       <p class="hint">สิ่งที่อยากให้พัฒนา และระบบที่ยังขาด</p>
       <div class="voices" id="voices"></div>
@@ -277,7 +279,7 @@
 </div>
 
 <script>
-const BUILD="2026-10-30.2";
+const BUILD="2026-10-30.3";
 const PASS="admin1234";
 const KEY="herbal_demo_eval";
 /* Web app URL เดียวกับที่ index.html ใช้ส่งข้อมูล (Apps Script /exec) */
@@ -445,13 +447,16 @@ function buildRounds(all){
   rounds.sort((a,b)=>b.last-a.last);
   roundOf=new Map();
   rounds.forEach(g=>g.rows.forEach(r=>roundOf.set(keyOf(r),g.key)));
-  const sig=all.length+'|'+rounds.map(g=>g.key+':'+g.rows.length).join(';');
+  const sig=all.length+'|'+fOrgType.value+'|'+rounds.map(g=>g.key+':'+g.rows.length).join(';');
   if(sig===roundSig)return;   // leave the open dropdown alone when nothing changed
   roundSig=sig;
+  // only the rounds of the chosen type, so the two lists can never combine into an empty page
+  const typeOk=r=>!fOrgType.value||r.orgType===fOrgType.value;
+  const listed=rounds.map(g=>({...g,n:g.rows.filter(typeOk).length})).filter(g=>g.n);
   const cur=fRound.value;
-  fRound.innerHTML=`<option value="">ทุกรอบ (${all.length} คน)</option>`+rounds.map(g=>
-    `<option value="${esc(g.key)}">${esc(fmtRange(g.first,g.last))} — ${esc(g.org)} (${g.rows.length} คน)</option>`).join('');
-  fRound.value=rounds.some(g=>g.key===cur)?cur:'';
+  fRound.innerHTML=`<option value="">ทุกรอบ (${all.filter(typeOk).length} คน)</option>`+listed.map(g=>
+    `<option value="${esc(g.key)}">${esc(fmtRange(g.first,g.last))} — ${esc(g.org)} (${g.n} คน)</option>`).join('');
+  fRound.value=listed.some(g=>g.key===cur)?cur:'';
 }
 
 /* ---- gate ---- */
@@ -523,9 +528,9 @@ function render(){
   $('src').textContent=cloudOk
     ?`✅ Google Sheet · ${cloudRows.length} รายการ`+(only?` (+${only} ในเครื่องนี้)`:'')+` · อัปเดต ${fmtTime(syncedAt)} น.`
     :`⚠️ ยังเชื่อม Google Sheet ไม่ได้ · แสดงเฉพาะข้อมูลในเครื่องนี้`;
-  $('fcount').innerHTML=!all.length?'ยังไม่มีข้อมูล'
-    :rows.length===all.length?`แสดงทั้งหมด <b>${all.length}</b> คน`
-    :`กำลังกรอง — <b>${rows.length}</b> จาก ${all.length} คน · ทุกตัวเลขในหน้านี้นับเฉพาะที่กรองแล้ว`;
+  const filtering=!!(fRound.value||fOrgType.value||fq.value.trim());
+  $('fNow').hidden=!filtering;
+  $('fcount').innerHTML=`แสดง <b>${rows.length}</b> จาก ${all.length} คน · ตัวเลขด้านล่างนับเฉพาะคนกลุ่มนี้`;
 
   // figure tiles
   const orgN=new Set(rows.map(r=>String(r.org||'').trim()).filter(Boolean)).size;
@@ -535,11 +540,11 @@ function render(){
   const rateAvg=avg(allRates);
   const npsV=rows.map(r=>r.nps).filter(v=>typeof v==='number');
   const npsAvg=avg(npsV);
-  const groups=[['พร้อมใช้ 9–10',npsV.filter(v=>v>=9).length,'var(--good)'],
-                ['สนใจ 7–8',npsV.filter(v=>v>=7&&v<9).length,'var(--warn)'],
-                ['ยังไม่พร้อม 0–6',npsV.filter(v=>v<7).length,'var(--bad)']];
+  const groups=[['พร้อมใช้',npsV.filter(v=>v>=9).length,'var(--good)','ให้ 9–10 คะแนน'],
+                ['สนใจ',npsV.filter(v=>v>=7&&v<9).length,'var(--warn)','ให้ 7–8 คะแนน'],
+                ['ยังไม่พร้อม',npsV.filter(v=>v<7).length,'var(--bad)','ให้ 0–6 คะแนน']];
   const seg=npsV.length?`<div class="seg">${groups.map(([,n,c])=>n?`<i style="width:${n/npsV.length*100}%;background:${c}"></i>`:'').join('')}</div>
-    <div class="segkey">${groups.map(([l,n,c])=>`<span style="--c:${c}">${l}: ${n}</span>`).join('')}</div>`:'';
+    <div class="segkey">${groups.map(([l,n,c,tip])=>`<span style="--c:${c}" title="${tip}">${l} ${n}</span>`).join('')}</div>`:'';
   $('kpis').innerHTML=[
     tile('var(--h-blue)','👥 ผู้ตอบแบบประเมิน',rows.length,'คน',`จาก ${orgN} หน่วยงาน`),
     tile('var(--h-orange)','📞 ควรติดต่อกลับ',fol.length,'คน',hotN?`ด่วน ${hotN} คน (ขอใบเสนอราคา นัดหมาย ทดลองใช้)`:fol.length?'ไม่มีรายการด่วน (ขอใบเสนอราคา นัดหมาย ทดลองใช้)':'ยังไม่มีใครขอให้ติดต่อกลับ'),
@@ -547,7 +552,8 @@ function render(){
     tile('var(--h-violet)','📈 ความอยากใช้ระบบ',npsAvg==null?'—':npsAvg.toFixed(1),'/ 10',npsV.length?`จากผู้ตอบข้อนี้ ${npsV.length} คน`:'ยังไม่มีผู้ตอบข้อนี้',seg),
   ].join('');
 
-  // who to call back
+  // who to call back — when looking at a few people, an empty section is only noise
+  $('followCard').hidden=filtering&&!fol.length;
   $('followN').textContent=`${fol.length} คน`;
   $('follow').innerHTML=fol.length?fol.map(r=>{
     const hot=isHot(r), tel=telOf(r.phone), when=fmtFollow(r);
@@ -572,10 +578,11 @@ function render(){
     m.avg==null?'':`rated|${m.key}|ผู้ที่ให้คะแนน ${m.name}`,drill&&drill.kind==='rated'&&drill.a===m.key)).join('');
 
   // modules they want, as a share of respondents
-  const mi=MODULES.map(m=>({...m,list:rows.filter(r=>(r.interest||[]).includes(m.name))})).sort((a,b)=>b.list.length-a.list.length);
-  $('interestBars').innerHTML=mi.map(m=>barRow(`${m.icon} ${m.name}`,rows.length?m.list.length/rows.length*100:0,`${m.list.length} คน`,'var(--brand-lt)',
+  const mi=MODULES.map(m=>({...m,list:rows.filter(r=>(r.interest||[]).includes(m.name))}))
+    .filter(m=>!filtering||m.list.length).sort((a,b)=>b.list.length-a.list.length);   // seven rows of "0 คน" say nothing about one person
+  $('interestBars').innerHTML=mi.length?mi.map(m=>barRow(`${m.icon} ${m.name}`,rows.length?m.list.length/rows.length*100:0,`${m.list.length} คน`,'var(--brand-lt)',
     `${m.name} — ${m.list.length} จาก ${rows.length} คน: ${who(m.list)}`,`interest|${m.name}|สนใจ ${m.name}`,
-    drill&&drill.kind==='interest'&&drill.a===m.name)).join('');
+    drill&&drill.kind==='interest'&&drill.a===m.name)).join(''):'<div class="none">ไม่ได้เลือกระบบใด</div>';
 
   // what matters to them
   const pc=new Map();
@@ -589,6 +596,7 @@ function render(){
 
   // what they said
   const vs=rows.filter(r=>String(r.improve||'').trim()||String(r.missing||'').trim()).reverse();
+  $('voiceCard').hidden=filtering&&!vs.length;
   $('voiceN').textContent=`${vs.length} ความเห็น`;
   $('voices').innerHTML=vs.length?vs.map(r=>`<blockquote class="voice">
       ${String(r.improve||'').trim()?`<p>“${esc(r.improve)}”</p>`:''}
